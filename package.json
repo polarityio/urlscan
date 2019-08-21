@@ -1,0 +1,11 @@
+{
+  "main": "./integration.js",
+  "name": "urlscan",
+  "version": "3.0.0-beta",
+  "private": true,
+  "dependencies": {
+    "request": "^2.88",
+    "lodash": "^4.17.15",
+    "async": "^3.1.0"
+  }
+}
