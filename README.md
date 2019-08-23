@@ -4,6 +4,9 @@ The Polarity urlscan integration will lookup domains, sha256 hashes, IPv4 and IP
 To learn more about urlscan, please visit: https://urlscan.io/about/
 
 
+| ![image](images/overlay.png) |
+|---|---|
+|*urlscan.io example* |
 
 
 
