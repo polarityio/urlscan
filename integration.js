@@ -14,7 +14,7 @@ let domainBlacklistRegex = null;
 let ipBlacklistRegex = null;
 
 const MAX_DOMAIN_LABEL_LENGTH = 63;
-const MAX_ENTITY_LENGTH = 100;
+const MAX_DOMAIN_LENGTH = 253;
 const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
@@ -77,6 +77,16 @@ function _setupRegexBlacklists(options) {
   }
 }
 
+function getQuery(entity, options) {
+  if (entity.isIP) {
+    return `ip:"${entity.value}"`;
+  } else if (entity.isDomain) {
+    return `domain:"${entity.value}"`;
+  } else if (entity.isHash) {
+    return `hash:"${entity.value}"`;
+  }
+}
+
 function doLookup(entities, options, cb) {
   let lookupResults = [];
   let tasks = [];
@@ -87,24 +97,15 @@ function doLookup(entities, options, cb) {
 
   entities.forEach((entity) => {
     if (!_isInvalidEntity(entity) && !_isEntityBlacklisted(entity, options)) {
-      //do the lookup
       let requestOptions = {
+        uri: `${options.host}/v1/search`,
         method: 'GET',
-        qs: { size: options.count },
+        qs: {
+          size: options.count,
+          q: getQuery(entity, options)
+        },
         json: true
       };
-
-      if (entity.isIPv4) {
-        requestOptions.uri = `${options.host}/v1/search/?q=ip:${entity.value}`
-      } else if (entity.isURL) {
-        requestOptions.uri = `${options.host}/v1/search/?q=url:${entity.value}`
-      } else if (entity.isDomain) {
-        requestOptions.uri = `${options.host}/v1/search/?q=domain:${entity.value}`
-      } else if (entity.isMD5 || entity.isSHA1 || entity.isSHA256) {
-        requestOptions.uri = `${options.host}/v1/search/?q=hash:${entity.value}`
-      } else {
-        return;
-      }
 
       Logger.trace({ body: requestOptions.body }, 'Request Body');
 
@@ -130,17 +131,15 @@ function doLookup(entities, options, cb) {
               entity: entity,
               body: null
             };
-          } else if (res.statusCode === 202) {
-            // no result found
-            result = {
-              entity: entity,
-              body: null
-            };
+          } else if (res.statusCode === 429) {
+            return done({
+              detail: 'Rate Limit Reached.'
+            });
           } else {
             // unexpected status code
             return done({
               err: body,
-              detail: `${body.error}: ${body.message}`
+              detail: `${body.message}: ${body.description}`
             });
           }
 
@@ -180,13 +179,12 @@ function doLookup(entities, options, cb) {
 }
 
 function _isInvalidEntity(entity) {
-  // Domains should not be over 100 characters long so if we get any of those we don't look them up
-  if (entity.value.length > MAX_ENTITY_LENGTH) {
-    return true;
-  }
-
   // Domain labels (the parts in between the periods, must be 63 characters or less
   if (entity.isDomain) {
+    if (entity.value.length > MAX_DOMAIN_LENGTH) {
+      return true;
+    }
+
     const invalidLabel = entity.value.split('.').find((label) => {
       return label.length > MAX_DOMAIN_LABEL_LENGTH;
     });
