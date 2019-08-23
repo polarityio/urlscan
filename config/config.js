@@ -90,7 +90,7 @@ module.exports = {
     {
       key: 'host',
       name: 'urlscan API URL',
-      description: 'The base URL for the urlscan.io API',
+      description: 'The base URL for the urlscan.io API which should include the schema (i.e., https://)',
       default: 'https://urlscan.io/api',
       type: 'text',
       userCanEdit: false,
@@ -98,7 +98,7 @@ module.exports = {
     },
     {
       key: 'count',
-      name: 'Result Count',
+      name: 'Result Limit',
       description: 'The maximum number of results to return from the urlscan API',
       default: '10',
       type: 'text',
