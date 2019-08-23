@@ -24,7 +24,7 @@ module.exports = {
    */
   description:
     'Polarity urlscan.io Integration',
-  entityTypes: ['IPv4', 'domain'],
+  entityTypes: ['IPv4', 'IPv6', 'IPv4CIDR', 'domain', 'sha256'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -77,7 +77,7 @@ module.exports = {
     rejectUnauthorized: true
   },
   logging: {
-    level: 'trace' //trace, debug, info, warn, error, fatal
+    level: 'info' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
