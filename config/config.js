@@ -99,7 +99,7 @@ module.exports = {
     {
       key: 'count',
       name: 'Result Limit',
-      description: 'The maximum number of results to return from the urlscan API',
+      description: 'The maximum number of results to return from the urlscan API.  (Changing this value will not affect cached integration results) ',
       default: '10',
       type: 'text',
       userCanEdit: true,
