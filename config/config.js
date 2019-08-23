@@ -24,7 +24,7 @@ module.exports = {
    */
   description:
     'Polarity urlscan.io Integration',
-  entityTypes: ['IPv4', 'domain'],
+  entityTypes: ['IPv4', 'IPv6', 'IPv4CIDR', 'domain', 'sha256'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -77,7 +77,7 @@ module.exports = {
     rejectUnauthorized: true
   },
   logging: {
-    level: 'trace' //trace, debug, info, warn, error, fatal
+    level: 'info' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
@@ -90,7 +90,7 @@ module.exports = {
     {
       key: 'host',
       name: 'urlscan API URL',
-      description: 'The base URL for the urlscan.io API',
+      description: 'The base URL for the urlscan.io API which should include the schema (i.e., https://)',
       default: 'https://urlscan.io/api',
       type: 'text',
       userCanEdit: false,
@@ -98,8 +98,8 @@ module.exports = {
     },
     {
       key: 'count',
-      name: 'Result Count',
-      description: 'The maximum number of results to return from the urlscan API',
+      name: 'Result Limit',
+      description: 'The maximum number of results to return from the urlscan API.  (Changing this value will not affect cached integration results) ',
       default: '10',
       type: 'text',
       userCanEdit: true,

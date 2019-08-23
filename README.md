@@ -1,9 +1,12 @@
 # Polarity urlscan Integration
-The Polarity urlscan integration will lookup domains and ips in urlscan and notify you about information such as date last scanned, and relevant in relation to the ip and domain.
+The Polarity urlscan integration will lookup domains, sha256 hashes, IPv4 and IPv6 addresses and IPv4 CIDRs in urlscan and provide contextual information about the entity.
 
 To learn more about urlscan, please visit: https://urlscan.io/about/
 
-Check out the integration below:
+
+| ![image](images/overlay.png) |
+|---|
+|*urlscan.io example* |
 
 
 
@@ -12,7 +15,7 @@ Check out the integration below:
 ### urlscan URL
 The base URL to use for the urlscan API. Default is set to: https://urlscan.io/api
 
-### urlscan Results
+### Result Limit
 The maximum number of results to return to the Polarity overlay window.
 
 ### Domain and IP Blacklist
