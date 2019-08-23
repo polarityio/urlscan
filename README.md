@@ -5,7 +5,7 @@ To learn more about urlscan, please visit: https://urlscan.io/about/
 
 
 | ![image](images/overlay.png) |
-|---|---|
+|---|
 |*urlscan.io example* |
 
 
