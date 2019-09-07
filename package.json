@@ -1,7 +1,7 @@
 {
   "main": "./integration.js",
   "name": "urlscan",
-  "version": "3.0.0-beta",
+  "version": "3.1.0-beta",
   "private": true,
   "dependencies": {
     "request": "^2.88.0",
