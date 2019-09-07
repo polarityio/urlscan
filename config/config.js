@@ -22,8 +22,7 @@ module.exports = {
    * @type String
    * @optional
    */
-  description:
-    'Polarity urlscan.io Integration',
+  description: 'Searches the urlscan.io API and returns results from the most recent, relevant scan',
   entityTypes: ['IPv4', 'IPv6', 'IPv4CIDR', 'domain', 'sha256'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
@@ -97,11 +96,11 @@ module.exports = {
       adminOnly: true
     },
     {
-      key: 'count',
-      name: 'Result Limit',
-      description: 'The maximum number of results to return from the urlscan API.  (Changing this value will not affect cached integration results) ',
-      default: '10',
-      type: 'text',
+      key: 'maliciousOnly',
+      name: 'View Malicious Indicators Only',
+      description: 'If checked, only indicators flagged as malicious will be returned',
+      default: false,
+      type: 'boolean',
       userCanEdit: true,
       adminOnly: false
     },

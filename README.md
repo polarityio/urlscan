@@ -8,15 +8,18 @@ To learn more about urlscan, please visit: https://urlscan.io/about/
 |---|
 |*urlscan.io example* |
 
+## Integration Overview
 
+The `urlscan` integration will return results from the most recent relevant scan performed by the `urlscan` service.  After searching for the scan, additional scan details are returned by retrieving the overall verdict information to include whether the indicator is malicious, the overall score, tags, categories and brands.
 
 ## urlscan Integration Options
 
 ### urlscan URL
 The base URL to use for the urlscan API. Default is set to: https://urlscan.io/api
 
-### Result Limit
-The maximum number of results to return to the Polarity overlay window.
+### View Malicious Indicators Only
+
+If checked, only indicators flagged as malicious will be returned
 
 ### Domain and IP Blacklist
 
