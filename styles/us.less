@@ -6,6 +6,33 @@ pre{
   margin-top: 5px;
 }
 
+.tag {
+  border-radius: 4px;
+  padding: 2px 5px;
+  margin-right: 3px;
+  line-height: 2em;
+  white-space: nowrap;
+  background-color: #eee;
+
+  &.malicious {
+    background-color: lighten(#ff4559, 15%);
+  }
+}
+
+.malicious{
+    color: #FF4559; //$p-red
+}
+
+.image-container{
+  img{
+    width: 100%;
+    height: 100%;
+  }
+
+  margin-top: 10px;
+  border: 1px solid #ddd;
+}
+
 .external-link-icon {
   font-size: 8px;
 }

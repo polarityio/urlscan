@@ -18,12 +18,6 @@ const MAX_DOMAIN_LENGTH = 253;
 const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
-/**
- *
- * @param entities
- * @param options
- * @param cb
- */
 function startup(logger) {
   Logger = logger;
   let defaults = {};
@@ -77,11 +71,11 @@ function _setupRegexBlacklists(options) {
   }
 }
 
-function getQuery(entity, options) {
+function getQuery(entity) {
   if (entity.isIP) {
     return `ip:"${entity.value}"`;
   } else if (entity.isDomain) {
-    return `domain:"${entity.value}"`;
+    return `page.domain:"${entity.value}"`;
   } else if (entity.isHash) {
     return `hash:"${entity.value}"`;
   }
@@ -101,8 +95,8 @@ function doLookup(entities, options, cb) {
         uri: `${options.host}/v1/search`,
         method: 'GET',
         qs: {
-          size: options.count,
-          q: getQuery(entity, options)
+          size: 1,
+          q: getQuery(entity)
         },
         json: true
       };
@@ -110,41 +104,28 @@ function doLookup(entities, options, cb) {
       Logger.trace({ body: requestOptions.body }, 'Request Body');
 
       tasks.push(function(done) {
-        requestWithDefaults(requestOptions, function(error, res, body) {
-          if (error) {
-            return done(error);
+        async.waterfall(
+          [
+            function(next) {
+              searchIndicator(entity, options, next);
+            },
+            function(result, next) {
+              if (_isMiss(result.body)) {
+                next(null, result);
+              } else {
+                let uri = result.body.results[0].result;
+                getVerdicts(uri, entity, options, (err, verdict) => {
+                  result.body.results[0].verdicts = verdict;
+
+                  next(null, result);
+                });
+              }
+            }
+          ],
+          (err, result) => {
+            done(err, result);
           }
-
-          //Logger.trace({ body: body, statusCode: res ? res.statusCode : 'N/A' }, 'Result of Lookup');
-
-          let result = {};
-
-          if (res.statusCode === 200) {
-            // we got data!
-            result = {
-              entity: entity,
-              body: body
-            };
-          } else if (res.statusCode === 404) {
-            // no result found
-            result = {
-              entity: entity,
-              body: null
-            };
-          } else if (res.statusCode === 429) {
-            return done({
-              detail: 'Rate Limit Reached.'
-            });
-          } else {
-            // unexpected status code
-            return done({
-              err: body,
-              detail: `${body.message}: ${body.description}`
-            });
-          }
-
-          done(null, result);
-        });
+        );
       });
     }
   });
@@ -157,6 +138,10 @@ function doLookup(entities, options, cb) {
     }
 
     results.forEach((result) => {
+      if (options.maliciousOnly === true && getIsMalicious(result) === false) {
+        return;
+      }
+
       if (result.body === null || _isMiss(result.body) || _.isEmpty(result.body)) {
         lookupResults.push({
           entity: result.entity,
@@ -176,6 +161,104 @@ function doLookup(entities, options, cb) {
     Logger.debug({ lookupResults }, 'Results');
     cb(null, lookupResults);
   });
+}
+
+function getIsMalicious(result) {
+  if (
+    result.body &&
+    Array.isArray(result.body.results) &&
+    result.body.results.length > 0 &&
+    result.body.results[0].verdicts &&
+    result.body.results[0].verdicts.overall &&
+    result.body.results[0].verdicts.overall.malicious
+  ) {
+    return result.body.results[0].verdicts.overall.malicious;
+  } else {
+    return false;
+  }
+}
+
+function searchIndicator(entity, options, cb) {
+  let requestOptions = {
+    uri: `${options.host}/v1/search`,
+    method: 'GET',
+    qs: {
+      size: 1,
+      q: getQuery(entity, options)
+    },
+    json: true
+  };
+
+  requestWithDefaults(requestOptions, function(error, response, body) {
+    if (error) {
+      return cb(error);
+    }
+
+    //Logger.trace({ body: body, statusCode: res ? res.statusCode : 'N/A' }, 'Result of Lookup');
+    let parsedResult = _handleErrors(entity, error, response, body);
+
+    if (parsedResult.error) {
+      cb(parsedResult.error);
+    } else {
+      cb(null, parsedResult.data);
+    }
+  });
+}
+
+function getVerdicts(uri, entity, options, cb) {
+  let requestOptions = {
+    uri: uri,
+    json: true
+  };
+
+  requestWithDefaults(requestOptions, (error, response, body) => {
+    let parsedResult = _handleErrors(entity, error, response, body);
+
+    if (parsedResult.error) {
+      cb(parsedResult.error);
+    } else {
+      cb(null, body.verdicts);
+    }
+  });
+}
+
+function _handleErrors(entity, err, response, body) {
+  let result;
+  if (response.statusCode === 200) {
+    // we got data!
+    result = {
+      error: null,
+      data: {
+        entity: entity,
+        body: body
+      }
+    };
+  } else if (response.statusCode === 404) {
+    // no result found
+    result = {
+      error: null,
+      data: {
+        entity: entity,
+        body: null
+      }
+    };
+  } else if (response.statusCode === 429) {
+    result = {
+      error: {
+        detail: 'Rate Limit Reached.'
+      }
+    };
+  } else {
+    // unexpected status code
+    result = {
+      error: {
+        body,
+        detail: `${body.message}: ${body.description}`
+      }
+    };
+  }
+
+  return result;
 }
 
 function _isInvalidEntity(entity) {

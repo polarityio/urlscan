@@ -1,19 +1,59 @@
-{{#if details.results}}
-  <h1 class="p-title">
-      {{fa-icon "info" fixedWidth=true}} Results
-  </h1>
-{{/if}}
 {{#each details.results as |result|}}
     <div class="mb-1">
-      {{#if result._id}}
-      <div>
-          <span class="p-value"><a href="https://urlscan.io/result/{{result._id}}">Pivot to Result Detail {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-      {{/if}}
+        {{#if result._id}}
+            <div>
+                <span class="p-value"><a href="https://urlscan.io/result/{{result._id}}">View Details {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+            </div>
+        {{/if}}
+
+        <span class="p-title">{{fa-icon "browser" fixedWidth=true}} Screenshot</span>
+        <div class="image-container">
+            <img src="https://urlscan.io/screenshots/{{result._id}}.png">
+        </div>
+
+        <h1 class="p-title">
+            {{fa-icon "gavel" fixedWidth=true}}  Verdicts
+        </h1>
+        <div>
+            <span class="p-key {{if result.verdicts.overall.malicious "malicious"}}">Malicious: </span>
+            <span class="p-value {{if result.verdicts.overall.malicious "malicious"}}">{{result.verdicts.overall.malicious}}</span>
+        </div>
+        <div>
+            <span class="p-key">Overall Score: </span>
+            <span class="p-value">{{result.verdicts.overall.score}}</span>
+        </div>
+        {{#if result.verdicts.overall.categories}}
+            <div>
+                <span class="p-key">Categories: </span>
+                {{#each result.verdicts.overall.categories as | category | }}
+                    <span class="list-item">{{category}}</span>
+                {{/each}}
+            </div>
+        {{/if}}
+        {{#if result.verdicts.overall.brands}}
+            <div>
+                <span class="p-key">Brands: </span>
+                {{#each result.verdicts.overall.brands as | brand | }}
+                    <span class="list-item">{{brand}}</span>
+                {{/each}}
+            </div>
+        {{/if}}
+
+        {{#if result.verdicts.overall.tags}}
+            <h1 class="p-title">
+                {{fa-icon "tags" fixedWidth=true}}  Tags
+            </h1>
+            <div>
+                {{#each result.verdicts.overall.tags as | tag | }}
+                    <span class="tag {{if result.verdicts.overall.malicious "malicious"}}">{{tag}}</span>
+                {{/each}}
+            </div>
+        {{/if}}
+
 
       {{#if result.task}}
       <h1 class="p-title">
-      {{fa-icon "info" fixedWidth=true}}  Scan Information
+      {{fa-icon "scanner" fixedWidth=true}}  Scan Information
       </h1>
       {{/if}}
 
@@ -39,7 +79,7 @@
 
       {{#if result.stats}}
       <h1 class="p-title">
-      {{fa-icon "info" fixedWidth=true}}  Site Statistics
+      {{fa-icon "chart-line" fixedWidth=true}}  Site Statistics
       </h1>
       {{/if}}
 
@@ -119,6 +159,5 @@
           <span class="p-value">{{result.page.asn}}</span>
       </div>
       {{/if}}
-      <hr>
     </div>
 {{/each}}

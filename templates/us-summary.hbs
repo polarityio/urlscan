@@ -1,6 +1,52 @@
-{{#if details.results}}
-  <span class="integration-summary-tag integration-background-color integration-border-color">
+<span class="integration-summary-tag integration-background-color integration-border-color">
     <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-    <span class="integration-text-color">Result Count: {{details.results.length}}</span>
-  </span>
-{{/if}}
+    <span class="integration-text-color">
+      {{#if overallVerdict.malicious}}
+          Malicious
+      {{else}}
+          Not Malicious
+      {{/if}}
+    </span>
+</span>
+
+<span class="integration-summary-tag integration-background-color integration-border-color">
+    <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+    <span class="integration-text-color">
+        Score: {{overallVerdict.score}}
+    </span>
+</span>
+
+{{#each overallVerdict.tags as | tag |}}
+    <span class="integration-summary-tag integration-background-color integration-border-color">
+        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+        <span class="integration-text-color">
+            {{fa-icon "tag" fixedWidth=true}} {{tag}}
+        </span>
+    </span>
+{{/each}}
+
+{{#each overallVerdict.categories as | tag |}}
+    <span class="integration-summary-tag integration-background-color integration-border-color">
+        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+        <span class="integration-text-color">
+            {{fa-icon "boxes" fixedWidth=true}} {{tag}}
+        </span>
+    </span>
+{{/each}}
+
+{{#each overallVerdict.brands as | brand |}}
+    <span class="integration-summary-tag integration-background-color integration-border-color">
+        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+        <span class="integration-text-color">
+            {{fa-icon "copyright" fixedWidth=true}} {{brand}}
+        </span>
+    </span>
+{{/each}}
+
+<span class="integration-summary-tag integration-background-color integration-border-color">
+    <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+    <span class="integration-text-color">
+        Results: {{details.total}}
+    </span>
+</span>
+
