@@ -103,20 +103,23 @@ function doLookup(entities, options, cb) {
 
       Logger.trace({ body: requestOptions.body }, 'Request Body');
 
-      tasks.push(function(done) {
+      tasks.push(function (done) {
         async.waterfall(
           [
-            function(next) {
+            function (next) {
               searchIndicator(entity, options, next);
             },
-            function(result, next) {
+            function (result, next) {
               if (_isMiss(result.body)) {
                 next(null, result);
               } else {
                 let uri = result.body.results[0].result;
                 getVerdicts(uri, entity, options, (err, verdict) => {
-                  result.body.results[0].verdicts = verdict;
+                  if (err) {
+                    return next(err);
+                  }
 
+                  result.body.results[0].verdicts = verdict;
                   next(null, result);
                 });
               }
@@ -189,11 +192,7 @@ function searchIndicator(entity, options, cb) {
     json: true
   };
 
-  requestWithDefaults(requestOptions, function(error, response, body) {
-    if (error) {
-      return cb(error);
-    }
-
+  requestWithDefaults(requestOptions, function (error, response, body) {
     //Logger.trace({ body: body, statusCode: res ? res.statusCode : 'N/A' }, 'Result of Lookup');
     let parsedResult = _handleErrors(entity, error, response, body);
 
@@ -223,6 +222,15 @@ function getVerdicts(uri, entity, options, cb) {
 }
 
 function _handleErrors(entity, err, response, body) {
+  if (err) {
+    return {
+      error: {
+        detail: 'HTTP Request Error',
+        error: err
+      }
+    };
+  }
+
   let result;
   if (response.statusCode === 200) {
     // we got data!
