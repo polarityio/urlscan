@@ -24,7 +24,6 @@ module.exports = {
    */
   description: 'Searches the urlscan.io API and returns results from the most recent, relevant scan',
   entityTypes: ['IPv4', 'IPv6', 'IPv4CIDR', 'domain', 'sha256'],
-  onDemandOnly: true,
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
