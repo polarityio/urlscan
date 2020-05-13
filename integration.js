@@ -2,6 +2,7 @@
 
 const request = require('request');
 const _ = require('lodash');
+const fp = require('lodash/fp');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
@@ -114,12 +115,11 @@ function doLookup(entities, options, cb) {
                 next(null, result);
               } else {
                 let uri = result.body.results[0].result;
-                getVerdicts(uri, entity, options, (err, verdict) => {
-                  if (err) {
-                    return next(err);
-                  }
-
+                getVerdicts(uri, entity, options, (err, { refererLinks, verdict }) => {
+                  if (err) return next(err);
+                  
                   result.body.results[0].verdicts = verdict;
+                  result.body.refererLinks = refererLinks;
                   next(null, result);
                 });
               }
@@ -212,14 +212,24 @@ function getVerdicts(uri, entity, options, cb) {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
-
+    
     if (parsedResult.error) {
       cb(parsedResult.error);
     } else {
-      cb(null, body.verdicts);
+      cb(null, {
+        refererLinks: _getRefererLinks(body),
+        verdicts: body.verdicts,
+      });
     }
   });
 }
+
+const _getRefererLinks = fp.flow(
+  fp.getOr([], "data.requests"),
+  fp.map(fp.getOr(false, "request.request.headers.Referer")),
+  fp.compact,
+  fp.uniq
+);
 
 function _handleErrors(entity, err, response, body) {
   if (err) {

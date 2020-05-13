@@ -161,3 +161,12 @@
       {{/if}}
     </div>
 {{/each}}
+
+{{#if (and details.refererLinks details.refererLinks.length)}}
+    <div class="p-title">Referer Links ({{details.refererLinks.length}}):</div>
+    <div class="wrap-container">
+        {{#each details.refererLinks as | link |}}
+            <span class="link-container">{{link}}</span>
+        {{/each}}
+    </div>
+{{/if}}
