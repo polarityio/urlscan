@@ -7,9 +7,26 @@
         {{/if}}
 
         <span class="p-title">{{fa-icon "browser" fixedWidth=true}} Screenshot</span>
-        <div class="image-container">
+        {{!-- <div class="image-container">
             <img src="https://urlscan.io/screenshots/{{result._id}}.png">
-        </div>
+        </div> --}}
+
+
+        {{#if result._id}}
+            <div>
+                <span class="p-key">Screenshot URL: </span>
+                <span id="copy-text">https://urlscan.io/screenshots/{{result._id}}.png</span>
+                <span class="p-value">
+                    https://urlscan.io/screenshots/{{result._id}}.png
+                    {{!-- <button
+                        class="copy-button"
+                        {{action "copyToClipboard" "https://urlscan.io/screenshots/{{result._id}}.png"}}
+                    >
+                        Copy
+                    </button> --}}
+                </span>
+            </div>
+        {{/if}}
 
         <h1 class="p-title">
             {{fa-icon "gavel" fixedWidth=true}}  Verdicts
@@ -50,120 +67,120 @@
             </div>
         {{/if}}
 
+        {{#if result.task}}
+            <h1 class="p-title">
+                {{fa-icon "scanner" fixedWidth=true}}  Scan Information
+            </h1>
+        {{/if}}
 
-      {{#if result.task}}
-      <h1 class="p-title">
-      {{fa-icon "scanner" fixedWidth=true}}  Scan Information
-      </h1>
-      {{/if}}
+        {{#if result.task.time}}
+            <div>
+                <span class="p-key">Result Time: </span>
+                <span class="p-value">{{result.task.time}}</span>
+            </div>
+        {{/if}}
 
-      {{#if result.task.time}}
-      <div>
-          <span class="p-key">Result Time: </span>
-          <span class="p-value">{{result.task.time}}</span>
-      </div>
-      {{/if}}
-      {{#if result.task.source}}
-      <div>
-          <span class="p-key">Result Source: </span>
-          <span class="p-value">{{result.task.source}}</span>
-      </div>
-      {{/if}}
+        {{#if result.task.source}}
+            <div>
+                <span class="p-key">Result Source: </span>
+                <span class="p-value">{{result.task.source}}</span>
+            </div>
+        {{/if}}
 
-      {{#if result.task.visibility}}
-      <div>
-          <span class="p-key">Visibility: </span>
-          <span class="p-value">{{result.task.visibility}}</span>
-      </div>
-      {{/if}}
+        {{#if result.task.visibility}}
+            <div>
+                <span class="p-key">Visibility: </span>
+                <span class="p-value">{{result.task.visibility}}</span>
+            </div>
+        {{/if}}
 
-      {{#if result.stats}}
-      <h1 class="p-title">
-      {{fa-icon "chart-line" fixedWidth=true}}  Site Statistics
-      </h1>
-      {{/if}}
+        {{#if result.stats}}
+        <h1 class="p-title">
+        {{fa-icon "chart-line" fixedWidth=true}}  Site Statistics
+        </h1>
+        {{/if}}
 
-      {{#if result.stats.uniqIPs}}
-      <div>
-          <span class="p-key">Unique IPs: </span>
-          <span class="p-value">{{result.stats.uniqIPs}}</span>
-      </div>
-      {{/if}}
+        {{#if result.stats.uniqIPs}}
+        <div>
+            <span class="p-key">Unique IPs: </span>
+            <span class="p-value">{{result.stats.uniqIPs}}</span>
+        </div>
+        {{/if}}
 
-      {{#if result.stats.consoleMsgs}}
-      <div>
-          <span class="p-key">Console Messages: </span>
-          <span class="p-value">{{result.stats.consoleMsgs}}</span>
-      </div>
-      {{/if}}
+        {{#if result.stats.consoleMsgs}}
+        <div>
+            <span class="p-key">Console Messages: </span>
+            <span class="p-value">{{result.stats.consoleMsgs}}</span>
+        </div>
+        {{/if}}
 
-      {{#if result.stats.dataLength}}
-      <div>
-          <span class="p-key">Total Data Length: </span>
-          <span class="p-value">{{result.stats.dataLength}}</span>
-      </div>
-      {{/if}}
+        {{#if result.stats.dataLength}}
+        <div>
+            <span class="p-key">Total Data Length: </span>
+            <span class="p-value">{{result.stats.dataLength}}</span>
+        </div>
+        {{/if}}
 
-      {{#if result.stats.encodedDataLength}}
-      <div>
-          <span class="p-key">Encoded Data Length: </span>
-          <span class="p-value">{{result.stats.encodedDataLength}}</span>
-      </div>
-      {{/if}}
+        {{#if result.stats.encodedDataLength}}
+        <div>
+            <span class="p-key">Encoded Data Length: </span>
+            <span class="p-value">{{result.stats.encodedDataLength}}</span>
+        </div>
+        {{/if}}
 
-      {{#if result.page}}
-      <h1 class="p-title">
-      {{fa-icon "info" fixedWidth=true}}  Site Information
-      </h1>
-      {{/if}}
+        {{#if result.page}}
+            <h1 class="p-title">
+                {{fa-icon "info" fixedWidth=true}}  Site Information
+            </h1>
+        {{/if}}
 
-      {{#if result.page.domain}}
-      <div>
-          <span class="p-key">Domain: </span>
-          <span class="p-value">{{result.page.domain}}</span>
-      </div>
-      {{/if}}
-      {{#if result.page.url}}
-      <div>
-          <span class="p-key">URL: </span>
-          <span class="p-value">{{result.page.url}}</span>
-      </div>
-      {{/if}}
-      {{#if result.page.ip}}
-      <div>
-          <span class="p-key">IP: </span>
-          <span class="p-value">{{result.page.ip}}</span>
-      </div>
-      {{/if}}
-      {{#if result.page.country}}
-      <div>
-          <span class="p-key">Country: </span>
-          <span class="p-value">{{result.page.country}}</span>
-      </div>
-      {{/if}}
-      {{#if result.page.city}}
-      <div>
-          <span class="p-key">City: </span>
-          <span class="p-value">{{result.page.city}}</span>
-      </div>
-      {{/if}}
-      {{#if result.page.asnname}}
-      <div>
-          <span class="p-key">ASN Name: </span>
-          <span class="p-value">{{result.page.asnname}}</span>
-      </div>
-      {{/if}}
-      {{#if result.page.asn}}
-      <div>
-          <span class="p-key">ASN: </span>
-          <span class="p-value">{{result.page.asn}}</span>
-      </div>
-      {{/if}}
+        {{#if result.page.domain}}
+            <div>
+                <span class="p-key">Domain: </span>
+                <span class="p-value">{{result.page.domain}}</span>
+            </div>
+        {{/if}}
+        {{#if result.page.url}}
+            <div>
+                <span class="p-key">URL: </span>
+                <span class="p-value">{{result.page.url}}</span>
+            </div>
+        {{/if}}
+        {{#if result.page.ip}}
+            <div>
+                <span class="p-key">IP: </span>
+                <span class="p-value">{{result.page.ip}}</span>
+            </div>
+        {{/if}}
+        {{#if result.page.country}}
+            <div>
+                <span class="p-key">Country: </span>
+                <span class="p-value">{{result.page.country}}</span>
+            </div>
+        {{/if}}
+        {{#if result.page.city}}
+            <div>
+                <span class="p-key">City: </span>
+                <span class="p-value">{{result.page.city}}</span>
+            </div>
+        {{/if}}
+        {{#if result.page.asnname}}
+            <div>
+                <span class="p-key">ASN Name: </span>
+                <span class="p-value">{{result.page.asnname}}</span>
+            </div>
+        {{/if}}
+        {{#if result.page.asn}}
+            <div>
+                <span class="p-key">ASN: </span>
+                <span class="p-value">{{result.page.asn}}</span>
+            </div>
+        {{/if}}
     </div>
 {{/each}}
 
 {{#if (and details.refererLinks details.refererLinks.length)}}
-    <div class="p-title">Referred To Links ({{details.refererLinks.length}}):</div>
+    <div class="p-title">Referred To URLs ({{details.refererLinks.length}}):</div>
     <div class="wrap-container">
         {{#each details.refererLinks as | link |}}
             <span class="link-container">{{link}}</span>

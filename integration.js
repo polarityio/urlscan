@@ -242,36 +242,51 @@ function _handleErrors(entity, err, response, body) {
   }
 
   let result;
-  if (response.statusCode === 200) {
-    // we got data!
-    result = {
-      error: null,
-      data: {
-        entity: entity,
-        body: body
-      }
-    };
-  } else if (response.statusCode === 404) {
-    // no result found
-    result = {
-      error: null,
-      data: {
-        entity: entity,
-        body: null
-      }
-    };
-  } else if (response.statusCode === 429) {
-    result = {
-      error: {
-        detail: 'Rate Limit Reached.'
-      }
-    };
-  } else {
-    // unexpected status code
+  if(response) {
+    if (response.statusCode === 200) {
+      // we got data!
+      result = {
+        error: null,
+        data: {
+          entity: entity,
+          body: body
+        }
+      };
+    } else if (response.statusCode === 404) {
+      // no result found
+      result = {
+        error: null,
+        data: {
+          entity: entity,
+          body: null
+        }
+      };
+    } else if (response.statusCode === 429) {
+      result = {
+        error: {
+          detail: 'Rate Limit Reached.'
+        }
+      };
+    } else {
+      // unexpected status code
+      result = {
+        error: {
+          body,
+          detail: `${body.message}: ${body.description}`
+        }
+      };
+    }
+  } else if (body) {
     result = {
       error: {
         body,
         detail: `${body.message}: ${body.description}`
+      }
+    };
+  } else {
+    result = {
+      error: {
+        detail: `Unknown Error: No response or body found.`
       }
     };
   }
