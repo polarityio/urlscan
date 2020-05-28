@@ -96,10 +96,29 @@ module.exports = {
       adminOnly: true
     },
     {
+      key: 'apiKey',
+      name: 'API Key',
+      description: 'A valid urlscan API Key which can be generated on the urlscan dashboard.',
+      default: '',
+      type: 'password',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'maliciousOnly',
       name: 'View Malicious Indicators Only',
       description: 'If checked, only indicators flagged as malicious will be returned',
       default: false,
+      type: 'boolean',
+      userCanEdit: true,
+      adminOnly: false
+    },
+    {
+      key: 'submitUrl',
+      name: 'Submit URL for Scanning',
+      description:
+        'If there are no search results, this allows you to submit the url for scanning when searching On Demand',
+      default: true,
       type: 'boolean',
       userCanEdit: true,
       adminOnly: false

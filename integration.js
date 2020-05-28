@@ -111,17 +111,17 @@ function doLookup(entities, options, cb) {
               searchIndicator(entity, options, next);
             },
             function (result, next) {
-              if (_isMiss(result.body)) {
-                next(null, result);
-              } else {
+              if (!_isMiss(result.body) && result.body.results[0] && result.body.results[0].result) {
                 let uri = result.body.results[0].result;
                 getVerdicts(uri, entity, options, (err, { refererLinks, verdict }) => {
                   if (err) return next(err);
-                  
+
                   result.body.results[0].verdicts = verdict;
                   result.body.refererLinks = refererLinks;
                   next(null, result);
                 });
+              } else {
+                next(null, result);
               }
             }
           ],
@@ -145,7 +145,27 @@ function doLookup(entities, options, cb) {
         return;
       }
 
-      if (result.body === null || _isMiss(result.body) || _.isEmpty(result.body)) {
+      const canSubmitUrl =
+        options.submitUrl &&
+        options.apiKey &&
+        result.entity.requestContext.requestType === 'OnDemand' &&
+        result.entity.isDomain &&
+        result.body &&
+        result.body.results &&
+        result.body.results.length === 0;
+
+      Logger.trace({ result, canSubmitUrl });
+
+      if (canSubmitUrl) {
+        lookupResults.push({
+          entity: result.entity,
+          isVolitile: true,
+          data: {
+            summary: [],
+            details: { canSubmitUrl }
+          }
+        });
+      } else if (result.body === null || _isMiss(result.body) || _.isEmpty(result.body)) {
         lookupResults.push({
           entity: result.entity,
           data: null
@@ -347,13 +367,61 @@ function _isEntityBlacklisted(entity, options) {
   return false;
 }
 
-function _isMiss(body) {
-  if (!body || !body.results || body.results.length === 0) {
-    return true;
-  }
-}
+const _isMiss = (body) => !body || !body.results;
+
+
+const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, callback) => {
+  const requestOptions = {
+    uri: 'https://urlscan.io/api/v1/scan/',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'API-Key': options.apiKey
+    },
+    body: {
+      url: entity.value,
+      ...(submitAsPublic && { public: 'on' }),
+      ...(tags.length > 0 && {
+        tags: fp.flow(
+          fp.split(','),
+          fp.map(fp.trim),
+          fp.concat('polarity'),
+          fp.uniq,
+          fp.compact
+        )(tags)
+      }),
+    },
+    json: true
+  };
+
+  requestWithDefaults(requestOptions, (error, response, body) => {
+    let parsedResult = _handleErrors(entity, error, response, body);
+    
+    Logger.trace({ requestOptions, error, response, body, parsedResult }, "SKFJLSDK<FJSKLDFJ");
+    if (parsedResult.error) {
+      callback(parsedResult.error, null);
+    } else {
+      const { data: { body } } = parsedResult;
+      callback(null, {
+        ...body,
+        results: [{
+          _id: body.uuid,
+          task: {
+            visibility: body.visibility
+          },
+          page: {
+            domain: entity.value,
+            url: body.url
+          }
+        }]
+      });
+      
+    }
+  });
+};
 
 module.exports = {
   doLookup: doLookup,
-  startup: startup
+  startup: startup,
+  onMessage: submitUrl
 };
