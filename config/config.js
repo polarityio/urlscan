@@ -98,7 +98,7 @@ module.exports = {
     {
       key: 'apiKey',
       name: 'API Key',
-      description: 'A valid urlscan API Key which can be generated on the urlscan dashboard.',
+      description: 'A valid urlscan API Key which can be generated on the urlscan dashboard. (Only required for new URL submission)',
       default: '',
       type: 'password',
       userCanEdit: false,

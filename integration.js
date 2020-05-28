@@ -141,9 +141,7 @@ function doLookup(entities, options, cb) {
     }
 
     results.forEach((result) => {
-      if (options.maliciousOnly === true && getIsMalicious(result) === false) {
-        return;
-      }
+      if (options.maliciousOnly === true && getIsMalicious(result) === false) return;
 
       const canSubmitUrl =
         options.submitUrl &&
@@ -153,8 +151,6 @@ function doLookup(entities, options, cb) {
         result.body &&
         result.body.results &&
         result.body.results.length === 0;
-
-      Logger.trace({ result, canSubmitUrl });
 
       if (canSubmitUrl) {
         lookupResults.push({
@@ -186,6 +182,7 @@ function doLookup(entities, options, cb) {
   });
 }
 
+
 function getIsMalicious(result) {
   if (
     result.body &&
@@ -213,7 +210,6 @@ function searchIndicator(entity, options, cb) {
   };
 
   requestWithDefaults(requestOptions, function (error, response, body) {
-    //Logger.trace({ body: body, statusCode: res ? res.statusCode : 'N/A' }, 'Result of Lookup');
     let parsedResult = _handleErrors(entity, error, response, body);
 
     if (parsedResult.error) {
@@ -397,7 +393,6 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, callback
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
     
-    Logger.trace({ requestOptions, error, response, body, parsedResult }, "SKFJLSDK<FJSKLDFJ");
     if (parsedResult.error) {
       callback(parsedResult.error, null);
     } else {
@@ -420,8 +415,24 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, callback
   });
 };
 
+const onDetails = (lookupObject, options, cb) => {
+  if (!_isMiss(result.body) && result.body.results[0] && result.body.results[0].result) {
+    let uri = result.body.results[0].result;
+    getVerdicts(uri, entity, options, (err, { refererLinks, verdict }) => {
+      if (err) return next(err);
+
+      result.body.results[0].verdicts = verdict;
+      result.body.refererLinks = refererLinks;
+      next(null, result);
+    });
+  } else {
+    next(null, result);
+  }
+};
+
 module.exports = {
-  doLookup: doLookup,
-  startup: startup,
-  onMessage: submitUrl
+  doLookup,
+  startup,
+  onMessage: submitUrl,
+  onDetails
 };
