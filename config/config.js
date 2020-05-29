@@ -23,7 +23,7 @@ module.exports = {
    * @optional
    */
   description: 'Searches the urlscan.io API and returns results from the most recent, relevant scan',
-  entityTypes: ['IPv4', 'IPv6', 'IPv4CIDR', 'domain', 'sha256'],
+  entityTypes: ['IPv4', 'IPv6', 'IPv4CIDR', 'domain', 'url', 'sha256'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -108,7 +108,7 @@ module.exports = {
       key: 'maliciousOnly',
       name: 'View Malicious Indicators Only',
       description: 'If checked, only indicators flagged as malicious will be returned',
-      default: false,
+      default: true,
       type: 'boolean',
       userCanEdit: true,
       adminOnly: false
