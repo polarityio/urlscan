@@ -7,12 +7,6 @@ polarity.export = PolarityComponent.extend({
   submitAsPublic: false,
   tags: '',
   actions: {
-    setSubmitAsPublic: function (e) {
-      this.set('submitAsPublic', !this.submitAsPublic);
-    },
-    setTags: function (tags) {
-      this.set('tags', tags);
-    },
     submitUrl: function () {
       const outerThis = this;
 

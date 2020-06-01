@@ -326,6 +326,10 @@ function _isInvalidEntity(entity) {
     }
   }
 
+  if(entity.isUrl && entity.requestContext.requestType !== 'OnDemand') {
+    return true;
+  }
+
   if (entity.isIPv4 && IGNORED_IPS.has(entity.value)) {
     return true;
   }
@@ -366,7 +370,7 @@ function _isEntityBlacklisted(entity, options) {
 const _isMiss = (body) => !body || !body.results;
 
 
-const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, callback) => {
+const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
   const requestOptions = {
     uri: 'https://urlscan.io/api/v1/scan/',
     method: 'POST',
@@ -394,10 +398,10 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, callback
     let parsedResult = _handleErrors(entity, error, response, body);
     
     if (parsedResult.error) {
-      callback(parsedResult.error, null);
+      cb(parsedResult.error, null);
     } else {
       const { data: { body } } = parsedResult;
-      callback(null, {
+      cb(null, {
         ...body,
         results: [{
           _id: body.uuid,

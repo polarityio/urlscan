@@ -6,30 +6,27 @@
             <hr class="submit-line" />
         </div>
         <div class="input-wrapper">
-            <span class="p-key">Submit URL as Public:  </span>
             <span class="p-value">
-                <input 
+                {{input
                     class="submit-as-public-checkbox"
-                    type="checkbox" 
-                    onchange={{action "setSubmitAsPublic"}} 
-                    id="submitAsPublic" checked={{submitAsPublic}}
-                    disabled={{isRunning}}
-                />
+                    type="checkbox"
+                    checked=submitAsPublic
+                    disabled=isRunning
+                }}
             </span>
-            
+            <span class="p-key"> &nbsp;Submit URL as Public</span>
         </div>
         <div class="input-wrapper d-flex flex-row align-items-center">
             <span class="p-key">Tags: &nbsp; </span>
             <span class="p-value">
-                <input 
+                {{input
                     class="tags-input mr-3 w-100"
                     type="text"
-                    oninput={{action "setTags" value="target.value"}}
-                    id="tags"
+                    oninput=tags
                     placeholder="Comma separated list..."
-                    value={{tags}}
-                    disabled={{isRunning}}
-                />
+                    value=tags
+                    disabled=isRunning
+                }}
             </span>
         </div>
     </div>
