@@ -1,6 +1,5 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
-  showDetails: false,
   entity: Ember.computed.alias('block.entity'),
   message: '',
   errorMessage: null,

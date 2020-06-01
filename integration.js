@@ -155,7 +155,7 @@ function doLookup(entities, options, cb) {
       if (canSubmitUrl) {
         lookupResults.push({
           entity: result.entity,
-          isVolitile: true,
+          isVolatile: true,
           data: {
             summary: [],
             details: { canSubmitUrl }
@@ -415,24 +415,9 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, callback
   });
 };
 
-const onDetails = (lookupObject, options, cb) => {
-  if (!_isMiss(result.body) && result.body.results[0] && result.body.results[0].result) {
-    let uri = result.body.results[0].result;
-    getVerdicts(uri, entity, options, (err, { refererLinks, verdict }) => {
-      if (err) return next(err);
-
-      result.body.results[0].verdicts = verdict;
-      result.body.refererLinks = refererLinks;
-      next(null, result);
-    });
-  } else {
-    next(null, result);
-  }
-};
 
 module.exports = {
   doLookup,
   startup,
-  onMessage: submitUrl,
-  onDetails
+  onMessage: submitUrl
 };

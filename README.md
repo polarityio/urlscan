@@ -1,5 +1,5 @@
 # Polarity urlscan Integration
-The Polarity urlscan integration will lookup domains, sha256 hashes, IPv4 and IPv6 addresses and IPv4 CIDRs in urlscan and provide contextual information about the entity. Also, with the use of an API key, you have the ability to submit new URLs to urlscan.
+The Polarity urlscan integration will lookup domains, sha256 hashes, IPv4 and IPv6 addresses and IPv4 CIDRs in urlscan and provide contextual information about the entity. Also, with the use of an API key, you have the ability to submit new URLs to urlscan when searching On Demand.
 
 To learn more about urlscan, please visit: https://urlscan.io/about/
 
@@ -20,11 +20,11 @@ The base URL to use for the urlscan API. Default is set to: https://urlscan.io/a
 ### API Key
 A valid urlscan API Key which can be generated on the urlscan dashboard. (Only required for new URL submission)
 
+### Submit URL for Scanning
+If there are no search results, this allows you to choose to submit the url for scanning when searching On Demand. (API Key Required)
+
 ### View Malicious Indicators Only
 If checked, only indicators flagged as malicious will be returned
-
-### Submit URL for Scanning
-If there are no search results, this allows you to submit the url for scanning when searching On Demand
 
 ### Domain and IP Blacklist
 

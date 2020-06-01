@@ -98,26 +98,27 @@ module.exports = {
     {
       key: 'apiKey',
       name: 'API Key',
-      description: 'A valid urlscan API Key which can be generated on the urlscan dashboard. (Only required for new URL submission)',
+      description:
+        'A valid urlscan API Key which can be generated on the urlscan dashboard. (Only required for new URL submission)',
       default: '',
       type: 'password',
       userCanEdit: false,
       adminOnly: true
     },
     {
-      key: 'maliciousOnly',
-      name: 'View Malicious Indicators Only',
-      description: 'If checked, only indicators flagged as malicious will be returned',
-      default: true,
+      key: 'submitUrl',
+      name: 'Submit URL for Scanning',
+      description:
+        'If there are no search results, this allows you to choose to submit the url for scanning when searching On Demand. (API Key Required)',
+      default: false,
       type: 'boolean',
       userCanEdit: true,
       adminOnly: false
     },
     {
-      key: 'submitUrl',
-      name: 'Submit URL for Scanning',
-      description:
-        'If there are no search results, this allows you to submit the url for scanning when searching On Demand',
+      key: 'maliciousOnly',
+      name: 'View Malicious Indicators Only',
+      description: 'If checked, only indicators flagged as malicious will be returned',
       default: true,
       type: 'boolean',
       userCanEdit: true,
