@@ -149,7 +149,7 @@ function doLookup(entities, options, cb) {
         options.submitUrl &&
         options.apiKey &&
         result.entity.requestContext.requestType === 'OnDemand' &&
-        result.entity.isDomain &&
+        (result.entity.isDomain || result.entity.isURL) &&
         result.body &&
         result.body.results &&
         result.body.results.length === 0;
