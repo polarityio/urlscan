@@ -74,11 +74,11 @@ function _setupRegexBlacklists(options) {
 
 function getQuery(entity) {
   if (entity.isIP) {
-    return `ip:"${entity.value}"`;
+    return `page.ip:"${entity.value}"`;
   } else if (entity.isDomain) {
     return `page.domain:"${entity.value}"`;
   } else if (entity.isHash) {
-    return `hash:"${entity.value}"`;
+    return `page.hash:"${entity.value}"`;
   } else if (entity.isUrl) {
     return `page.url:"${entity.value}"`;
   }
