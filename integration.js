@@ -79,7 +79,7 @@ function getQuery(entity) {
     return `page.domain:"${entity.value}"`;
   } else if (entity.isHash) {
     return `page.hash:"${entity.value}"`;
-  } else if (entity.isUrl) {
+  } else if (entity.isURL) {
     return `page.url:"${entity.value}"`;
   }
 }
@@ -104,7 +104,7 @@ function doLookup(entities, options, cb) {
         json: true
       };
 
-      Logger.trace({ body: requestOptions.body }, 'Request Body');
+      Logger.trace({ requestOptions }, 'Request Body');
 
       tasks.push(function (done) {
         async.waterfall(
@@ -333,7 +333,7 @@ function _isInvalidEntity(entity) {
     }
   }
 
-  if(entity.isUrl && entity.requestContext.requestType !== 'OnDemand') {
+  if(entity.isURL && entity.requestContext.requestType !== 'OnDemand') {
     return true;
   }
 
