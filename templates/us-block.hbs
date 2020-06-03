@@ -57,6 +57,14 @@
 {{else}}
     {{#each details.results as |result|}}
         <div class="mb-1">
+            {{#if result.justSubmitted}}
+                <div class="note">
+                    <span class="p-key">
+                        NOTE: With this URL recently being submitted,
+                        the urlscan Details and the Screenshot URL might be temporarily unavailable.
+                    </span>
+                </div>
+            {{/if}}
             {{#if result._id}}
                 <div>
                     <span class="p-value">
@@ -236,7 +244,7 @@
         <div class="p-title">{{fa-icon "link"}} Referred To URLs ({{details.refererLinks.length}}):</div>
         <div class="wrap-container">
             {{#each details.refererLinks as | link |}}
-                <span class="link-container"><a class="p-link" href={{link}}>{{link}}</a></span>
+                <span class="link-container">{{link}}</span>
             {{/each}}
         </div>
     {{/if}}

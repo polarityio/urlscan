@@ -161,7 +161,12 @@ function doLookup(entities, options, cb) {
             details: { canSubmitUrl }
           }
         });
-      } else if (result.body === null || _isMiss(result.body) || _.isEmpty(result.body)) {
+      } else if (
+        result.body === null ||
+        _isMiss(result.body) ||
+        _.isEmpty(result.body) ||
+        _.isEmpty(result.body.results)
+      ) {
         lookupResults.push({
           entity: result.entity,
           data: null
@@ -334,6 +339,10 @@ function _isInvalidEntity(entity) {
     return true;
   }
 
+  if (entity.isIP && entity.isPrivateIP) {
+    return true;
+  }
+
   return false;
 }
 
@@ -404,6 +413,7 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
       cb(null, {
         ...body,
         results: [{
+          justSubmitted: true,
           _id: body.uuid,
           task: {
             visibility: body.visibility
