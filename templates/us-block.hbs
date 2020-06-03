@@ -36,7 +36,7 @@
                 {{fa-icon "spinner-third" fixedWidth=true spin=true}} Submitting
             {{/if}}
         </div>
-        <button 
+        <button
             {{action "submitUrl"}}
             class="p-btn btn btn-light mt-1"
             disabled={{isRunning}}
@@ -78,16 +78,17 @@
                 <div class="note private">
                     <span class="p-key">
                         <span class="p-value">NOTE:</span>
-                        As a private submission the scan result is not searchable. 
-                        Please save this link for your future reference.
+                        As a private submission the scan result is not searchable.
+                        Please save this link for your future reference or login to
+                        your account to view your private submissions.
                     </span>
                 </div>
             {{/if}}
             <span class="p-title">{{fa-icon "browser" fixedWidth=true}} Screenshot</span>
             {{#if result._id}}
-                <div class="image-container">	
-                    <img src="https://urlscan.io/screenshots/{{result._id}}.png">	
-                </div>	
+                <div class="image-container">
+                    <img src="https://urlscan.io/screenshots/{{result._id}}.png">
+                </div>
                 <div>
                     <span class="p-key">Screenshot URL: </span>
                     <span class="p-value">

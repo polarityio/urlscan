@@ -112,8 +112,8 @@ module.exports = {
         'If there are no search results, this allows you to choose to submit the url for scanning when searching On Demand. (API Key Required)',
       default: false,
       type: 'boolean',
-      userCanEdit: true,
-      adminOnly: false
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'maliciousOnly',
@@ -131,7 +131,7 @@ module.exports = {
       default: '',
       type: 'text',
       userCanEdit: false,
-      adminOnly: false
+      adminOnly: true
     },
     {
       key: 'domainBlacklistRegex',
@@ -141,7 +141,7 @@ module.exports = {
       default: '',
       type: 'text',
       userCanEdit: false,
-      adminOnly: false
+      adminOnly: true
     },
     {
       key: 'ipBlacklistRegex',
@@ -150,7 +150,7 @@ module.exports = {
       default: '',
       type: 'text',
       userCanEdit: false,
-      adminOnly: false
+      adminOnly: true
     }
   ]
 };
