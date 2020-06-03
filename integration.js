@@ -78,7 +78,7 @@ function getQuery(entity) {
   } else if (entity.isDomain) {
     return `page.domain:"${entity.value}"`;
   } else if (entity.isHash) {
-    return `page.hash:"${entity.value}"`;
+    return `hash:"${entity.value}"`;
   } else if (entity.isURL) {
     return `page.url:"${entity.value}"`;
   }

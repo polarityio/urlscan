@@ -22,6 +22,7 @@ A valid urlscan API Key which can be generated on the urlscan dashboard. (Only r
 
 ### Submit URL for Scanning
 If there are no search results, this allows you to choose to submit the url for scanning when searching On Demand. (API Key Required)
+> NOTE: If you submit a url as private and not public the scan result is not searchable. Please save this link for your future reference. The only place in the future that a private submission will be found is on your user profile on the urlscan.io dashboard (`https://urlscan.io/user/` or `https://urlscan.io/user/search/#`)
 
 ### View Malicious Indicators Only
 If checked, only indicators flagged as malicious will be returned
