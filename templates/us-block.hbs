@@ -60,7 +60,7 @@
             {{#if result.justSubmitted}}
                 <div class="note">
                     <span class="p-key">
-                        NOTE: With this URL recently being submitted,
+                        <span class="p-value">NOTE:</span> With this URL recently being submitted,
                         the urlscan Details and the Screenshot URL might be temporarily unavailable.
                     </span>
                 </div>
@@ -74,7 +74,13 @@
                     </span>
                 </div>
             {{/if}}
-
+            {{#if (and result.justSubmitted result.task result.task.visibility (eq result.task.visibility "private"))}}
+                <div class="note private">
+                    <span class="p-key">
+                        <span class="p-value">NOTE:</span> By leaving this submission private, this link will not be accessible after this.
+                    </span>
+                </div>
+            {{/if}}
             <span class="p-title">{{fa-icon "browser" fixedWidth=true}} Screenshot</span>
 
             {{#if result._id}}
