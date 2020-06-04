@@ -99,7 +99,7 @@ module.exports = {
       key: 'apiKey',
       name: 'API Key',
       description:
-        'A valid urlscan API Key which can be generated on the urlscan dashboard. (Only required for new URL submission)',
+        'A valid urlscan API Key which can be generated on the urlscan dashboard. (Only required for manual new URL submission)',
       default: '',
       type: 'password',
       userCanEdit: false,
@@ -107,7 +107,7 @@ module.exports = {
     },
     {
       key: 'submitUrl',
-      name: 'Submit URL for Scanning',
+      name: 'Allow Manual URL Submission for Scanning',
       description:
         'If there are no search results, this allows you to choose to submit the url for scanning when searching On Demand. (API Key Required)',
       default: false,
