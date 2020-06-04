@@ -1,52 +1,61 @@
-<span class="integration-summary-tag integration-background-color integration-border-color">
-    <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-    <span class="integration-text-color">
-      {{#if overallVerdict.malicious}}
-          Malicious
-      {{else}}
-          Not Malicious
-      {{/if}}
+{{#if details.canSubmitUrl}}
+    <span class="integration-summary-tag integration-background-color integration-border-color">
+        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+        <span class="integration-text-color">Not Found</span>
     </span>
-</span>
-
-<span class="integration-summary-tag integration-background-color integration-border-color">
-    <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-    <span class="integration-text-color">
-        Score: {{overallVerdict.score}}
-    </span>
-</span>
-
-{{#each overallVerdict.tags as | tag |}}
+{{else}}
     <span class="integration-summary-tag integration-background-color integration-border-color">
         <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
         <span class="integration-text-color">
-            {{fa-icon "tag" fixedWidth=true}} {{tag}}
+        {{#if overallVerdict.malicious}}
+            Malicious
+        {{else}}
+            Not Malicious
+        {{/if}}
         </span>
     </span>
-{{/each}}
 
-{{#each overallVerdict.categories as | tag |}}
-    <span class="integration-summary-tag integration-background-color integration-border-color">
-        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-        <span class="integration-text-color">
-            {{fa-icon "boxes" fixedWidth=true}} {{tag}}
+    {{#if (or overallVerdict.score (eq overallVerdict.score 0))}}
+        <span class="integration-summary-tag integration-background-color integration-border-color">
+            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+            <span class="integration-text-color">
+                Score: {{if (eq overallVerdict.score 0) "0" overallVerdict.score}}
+            </span>
         </span>
-    </span>
-{{/each}}
+    {{/if}}
 
-{{#each overallVerdict.brands as | brand |}}
-    <span class="integration-summary-tag integration-background-color integration-border-color">
-        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-        <span class="integration-text-color">
-            {{fa-icon "copyright" fixedWidth=true}} {{brand}}
+    {{#each overallVerdict.tags as | tag |}}
+        <span class="integration-summary-tag integration-background-color integration-border-color">
+            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+            <span class="integration-text-color">
+                {{fa-icon "tag" fixedWidth=true}} {{tag}}
+            </span>
         </span>
-    </span>
-{{/each}}
+    {{/each}}
 
-<span class="integration-summary-tag integration-background-color integration-border-color">
-    <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-    <span class="integration-text-color">
-        Results: {{details.total}}
-    </span>
-</span>
+    {{#each overallVerdict.categories as | tag |}}
+        <span class="integration-summary-tag integration-background-color integration-border-color">
+            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+            <span class="integration-text-color">
+                {{fa-icon "boxes" fixedWidth=true}} {{tag}}
+            </span>
+        </span>
+    {{/each}}
 
+    {{#each overallVerdict.brands as | brand |}}
+        <span class="integration-summary-tag integration-background-color integration-border-color">
+            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+            <span class="integration-text-color">
+                {{fa-icon "copyright" fixedWidth=true}} {{brand}}
+            </span>
+        </span>
+    {{/each}}
+    {{#if details.total}}
+        <span class="integration-summary-tag integration-background-color integration-border-color">
+            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+            <span class="integration-text-color">
+                Results: {{details.total}}
+            </span>
+        </span>
+    {{/if}}
+{{/if}}
