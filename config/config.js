@@ -112,8 +112,8 @@ module.exports = {
         'If there are no search results, this allows you to choose to submit the url for scanning when searching On Demand. (API Key Required)',
       default: false,
       type: 'boolean',
-      userCanEdit: true,
-      adminOnly: false
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'maliciousOnly',
@@ -130,7 +130,7 @@ module.exports = {
       description: 'List of domains and IPs that you never want to send to urlscan',
       default: '',
       type: 'text',
-      userCanEdit: true,
+      userCanEdit: false,
       adminOnly: false
     },
     {
@@ -140,7 +140,7 @@ module.exports = {
         'Domains that match the given regex will not be looked up.',
       default: '',
       type: 'text',
-      userCanEdit: true,
+      userCanEdit: false,
       adminOnly: false
     },
     {
@@ -149,7 +149,7 @@ module.exports = {
       description: 'IPs that match the given regex will not be looked up.',
       default: '',
       type: 'text',
-      userCanEdit: true,
+      userCanEdit: false,
       adminOnly: false
     }
   ]
