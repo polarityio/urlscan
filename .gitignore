@@ -8,7 +8,7 @@
 # Ignore Sublime Text Project Files
 *.sublime-project
 *.sublime-workspace
-sftp-config.json
+
 
 # Ignore Eclipse Project Information
 *.settings
@@ -16,11 +16,9 @@ sftp-config.json
 *.classpath
 dependency-reduced-pom.xml
 
+
 # Ignore Excel Files
 *.xlsx
-
-# Ignore local Atom files
-*.remote-sync.json
 
 # Ignore local log files
 *.log
@@ -30,4 +28,12 @@ README.html
 
 # Ignored installed NPM modules
 node_modules/
-test-runner.js
+
+# Ignore private keys
+key/
+
+#Ignore VSCode 
+*.history
+.histoy
+*.vscode
+.vscode
