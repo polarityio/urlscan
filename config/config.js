@@ -144,7 +144,7 @@ module.exports = {
       adminOnly: false
     },
     {
-      key: 'ipBlacklistRegex',
+      key: 'ipBlocklistRegex',
       name: 'Ignored IP Regex',
       description: 'IPs that match the given regex will not be looked up.',
       default: '',
