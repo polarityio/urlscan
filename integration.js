@@ -94,17 +94,6 @@ function doLookup(entities, options, cb) {
 
   entities.forEach((entity) => {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-      let requestOptions = {
-        uri: `${options.host}/v1/search`,
-        method: 'GET',
-        qs: {
-          size: 1,
-          q: getQuery(entity)
-        },
-        json: true
-      };
-
-      Logger.trace({ requestOptions }, 'Request Body');
 
       tasks.push(function (done) {
         async.waterfall(
@@ -120,6 +109,7 @@ function doLookup(entities, options, cb) {
 
                   result.body.results[0].verdicts = verdict;
                   result.body.refererLinks = refererLinks;
+
                   next(null, result);
                 });
               } else {
@@ -209,6 +199,9 @@ function searchIndicator(entity, options, cb) {
   let requestOptions = {
     uri: `${options.host}/v1/search`,
     method: 'GET',
+    headers: {
+      ...(options.apiKey && { 'API-Key': options.apiKey })
+    },
     qs: {
       size: 1,
       q: getQuery(entity, options)

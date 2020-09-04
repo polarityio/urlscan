@@ -73,10 +73,10 @@ module.exports = {
     // the url parameter (by embedding the auth info in the uri)
     proxy: '',
 
-    rejectUnauthorized: true
+    rejectUnauthorized: false
   },
   logging: {
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'trace' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
