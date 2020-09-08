@@ -14,9 +14,6 @@ The `urlscan` integration will return results from the most recent relevant scan
 
 ## urlscan Integration Options
 
-### urlscan URL
-The base URL to use for the urlscan API. Default is set to: https://urlscan.io/api
-
 ### API Key
 A valid urlscan API Key which can be generated on the urlscan dashboard. (Only required for manual new URL submission)
 

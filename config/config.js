@@ -73,10 +73,10 @@ module.exports = {
     // the url parameter (by embedding the auth info in the uri)
     proxy: '',
 
-    rejectUnauthorized: false
+    rejectUnauthorized: true
   },
   logging: {
-    level: 'trace' //trace, debug, info, warn, error, fatal
+    level: 'info' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
@@ -86,15 +86,6 @@ module.exports = {
    * @optional
    */
   options: [
-    {
-      key: 'host',
-      name: 'urlscan API URL',
-      description: 'The base URL for the urlscan.io API which should include the schema (i.e., https://)',
-      default: 'https://urlscan.io/api',
-      type: 'text',
-      userCanEdit: false,
-      adminOnly: true
-    },
     {
       key: 'apiKey',
       name: 'API Key',

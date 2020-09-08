@@ -1,10 +1,10 @@
 {{#if details.canSubmitUrl}}
-    <span class="integration-summary-tag integration-background-color integration-border-color">
+    <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
         <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
         <span class="integration-text-color">Not Found</span>
     </span>
 {{else}}
-    <span class="integration-summary-tag integration-background-color integration-border-color">
+    <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
         <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
         <span class="integration-text-color">
         {{#if overallVerdict.malicious}}
@@ -16,7 +16,7 @@
     </span>
 
     {{#if (or overallVerdict.score (eq overallVerdict.score 0))}}
-        <span class="integration-summary-tag integration-background-color integration-border-color">
+        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
             <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
             <span class="integration-text-color">
                 Score: {{if (eq overallVerdict.score 0) "0" overallVerdict.score}}
@@ -25,7 +25,7 @@
     {{/if}}
 
     {{#each overallVerdict.tags as | tag |}}
-        <span class="integration-summary-tag integration-background-color integration-border-color">
+        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
             <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
             <span class="integration-text-color">
                 {{fa-icon "tag" fixedWidth=true}} {{tag}}
@@ -34,7 +34,7 @@
     {{/each}}
 
     {{#each overallVerdict.categories as | tag |}}
-        <span class="integration-summary-tag integration-background-color integration-border-color">
+        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
             <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
             <span class="integration-text-color">
                 {{fa-icon "boxes" fixedWidth=true}} {{tag}}
@@ -43,7 +43,7 @@
     {{/each}}
 
     {{#each overallVerdict.brands as | brand |}}
-        <span class="integration-summary-tag integration-background-color integration-border-color">
+        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
             <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
             <span class="integration-text-color">
                 {{fa-icon "copyright" fixedWidth=true}} {{brand}}
@@ -51,10 +51,18 @@
         </span>
     {{/each}}
     {{#if details.total}}
-        <span class="integration-summary-tag integration-background-color integration-border-color">
+        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
             <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
             <span class="integration-text-color">
                 Results: {{details.total}}
+            </span>
+        </span>
+    {{/if}}
+    {{#if details.searchLimitTag}}
+        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
+            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+            <span class="integration-text-color">
+                Daily Searches Remaining: {{details.searchLimitTag}}
             </span>
         </span>
     {{/if}}

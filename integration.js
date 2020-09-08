@@ -19,6 +19,9 @@ const MAX_DOMAIN_LENGTH = 253;
 const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
+const URL = 'https://urlscan.io';
+const API_URL = URL + '/api';
+
 function startup(logger) {
   Logger = logger;
   let defaults = {};
@@ -128,54 +131,71 @@ function doLookup(entities, options, cb) {
   async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
     if (err) {
       Logger.error({ err: err }, 'Error');
-      cb(err);
-      return;
+      return cb(err);
     }
 
-    results.forEach((result) => {
-      if (options.maliciousOnly === true && getIsMalicious(result) === false) return;
+    requestWithDefaults(
+      {
+        uri: `${URL}/user/quotas`,
+        method: 'GET',
+        headers: {
+          ...(options.apiKey && { 'API-Key': options.apiKey })
+        },
+        json: true
+      },
+      function (error, response, body) {
+        results.forEach((result) => {
+          if (options.maliciousOnly === true && getIsMalicious(result) === false) return;
 
-      const canSubmitUrl =
-        options.submitUrl &&
-        options.apiKey &&
-        result.entity.requestContext.requestType === 'OnDemand' &&
-        (result.entity.isDomain || result.entity.isURL) &&
-        result.body &&
-        result.body.results &&
-        result.body.results.length === 0;
+          const canSubmitUrl =
+            options.submitUrl &&
+            options.apiKey &&
+            result.entity.requestContext.requestType === 'OnDemand' &&
+            (result.entity.isDomain || result.entity.isURL) &&
+            result.body &&
+            result.body.results &&
+            result.body.results.length === 0;
 
-      if (canSubmitUrl) {
-        lookupResults.push({
-          entity: result.entity,
-          isVolatile: true,
-          data: {
-            summary: [],
-            details: { canSubmitUrl }
+          if (canSubmitUrl) {
+            lookupResults.push({
+              entity: result.entity,
+              isVolatile: true,
+              data: {
+                summary: [],
+                details: { canSubmitUrl }
+              }
+            });
+          } else if (
+            result.body === null ||
+            _isMiss(result.body) ||
+            _.isEmpty(result.body) ||
+            _.isEmpty(result.body.results)
+          ) {
+            lookupResults.push({
+              entity: result.entity,
+              data: null
+            });
+          } else {
+            const dailySearchLimit = fp.get('limits.search.day')(body);
+            lookupResults.push({
+              entity: result.entity,
+              data: {
+                summary: [],
+                details: {
+                  ...result.body,
+                  searchLimitTag:
+                    dailySearchLimit.percentage > 50 &&
+                    `${dailySearchLimit.limit - dailySearchLimit.used}/${dailySearchLimit.limit}`
+                }
+              }
+            });
           }
         });
-      } else if (
-        result.body === null ||
-        _isMiss(result.body) ||
-        _.isEmpty(result.body) ||
-        _.isEmpty(result.body.results)
-      ) {
-        lookupResults.push({
-          entity: result.entity,
-          data: null
-        });
-      } else {
-        lookupResults.push({
-          entity: result.entity,
-          data: {
-            summary: [],
-            details: result.body
-          }
-        });
+
+        Logger.debug({ lookupResults }, 'Results');
+        cb(null, lookupResults);
       }
-    });
-
-    Logger.debug({ lookupResults }, 'Results');
-    cb(null, lookupResults);
+    );
   });
 }
 
@@ -197,7 +217,7 @@ function getIsMalicious(result) {
 
 function searchIndicator(entity, options, cb) {
   let requestOptions = {
-    uri: `${options.host}/v1/search`,
+    uri: `${API_URL}/v1/search`,
     method: 'GET',
     headers: {
       ...(options.apiKey && { 'API-Key': options.apiKey })
@@ -280,7 +300,7 @@ function _handleErrors(entity, err, response, body) {
     } else if (response.statusCode === 429) {
       result = {
         error: {
-          detail: 'Rate Limit Reached.'
+          detail: fp.get('message')(body) || 'Rate Limit Reached.'
         }
       };
     } else {
@@ -376,11 +396,11 @@ const _isMiss = (body) => !body || !body.results;
 
 const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
   const requestOptions = {
-    uri: 'https://urlscan.io/api/v1/scan/',
+    uri: `${API_URL}/v1/scan/`,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'API-Key': options.apiKey
+      ...(options.apiKey && { 'API-Key': options.apiKey })
     },
     body: {
       url: entity.value,
@@ -393,7 +413,7 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
           fp.uniq,
           fp.compact
         )(tags)
-      }),
+      })
     },
     json: true
   };
