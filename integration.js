@@ -250,7 +250,7 @@ function getVerdicts(uri, entity, options, cb) {
     let parsedResult = _handleErrors(entity, error, response, body);
     
     if (parsedResult.error) {
-      cb(parsedResult.error);
+      cb(parsedResult.error, {});
     } else {
       cb(null, {
         refererLinks: _getRefererLinks(body),
