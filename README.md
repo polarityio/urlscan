@@ -15,7 +15,7 @@ The `urlscan` integration will return results from the most recent relevant scan
 ## urlscan Integration Options
 
 ### API Key
-A valid urlscan API Key which can be generated on the urlscan dashboard. (Only required for manual new URL submission)
+A valid urlscan API Key which can be generated on the urlscan dashboard. If not provided, you will be treated as an Anonymous user.  An API Key is required for URL submission.
 
 ### Allow Manual URL Submission for Scanning
 If there are no search results, this allows you to choose to submit the url for scanning when searching On Demand. (API Key Required)
