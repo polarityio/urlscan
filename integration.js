@@ -422,7 +422,7 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
     let parsedResult = _handleErrors(entity, error, response, body);
     
     if (parsedResult.error) {
-      cb(parsedResult.error, null);
+      cb({ errors: [parsedResult.error] });
     } else {
       const { data: { body } } = parsedResult;
       cb(null, {
