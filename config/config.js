@@ -87,15 +87,6 @@ module.exports = {
    */
   options: [
     {
-      key: 'host',
-      name: 'urlscan API URL',
-      description: 'The base URL for the urlscan.io API which should include the schema (i.e., https://)',
-      default: 'https://urlscan.io/api',
-      type: 'text',
-      userCanEdit: false,
-      adminOnly: true
-    },
-    {
       key: 'apiKey',
       name: 'API Key',
       description:
