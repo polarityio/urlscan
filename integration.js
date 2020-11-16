@@ -46,6 +46,10 @@ function startup(logger) {
     defaults.proxy = config.request.proxy;
   }
 
+  if (typeof config.request.rejectUnauthorized === 'boolean') {
+    defaults.rejectUnauthorized = config.request.rejectUnauthorized;
+  }
+
   requestWithDefaults = request.defaults(defaults);
 }
 
@@ -107,10 +111,10 @@ function doLookup(entities, options, cb) {
             function (result, next) {
               if (!_isMiss(result.body) && result.body.results[0] && result.body.results[0].result) {
                 let uri = result.body.results[0].result;
-                getVerdicts(uri, entity, options, (err, { refererLinks, verdict }) => {
+                getVerdicts(uri, entity, options, (err, { refererLinks, verdicts }) => {
                   if (err) return next(err);
 
-                  result.body.results[0].verdicts = verdict;
+                  result.body.results[0].verdicts = verdicts;
                   result.body.refererLinks = refererLinks;
 
                   next(null, result);
