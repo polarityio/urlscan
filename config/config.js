@@ -111,7 +111,7 @@ module.exports = {
       key: 'maliciousOnly',
       name: 'View Malicious Indicators Only',
       description: 'If checked, only indicators flagged as malicious will be returned',
-      default: true,
+      default: false,
       type: 'boolean',
       userCanEdit: true,
       adminOnly: false
