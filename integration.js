@@ -34,7 +34,10 @@ function startup(logger) {
     defaults.key = fs.readFileSync(config.request.key);
   }
 
-  if (typeof config.request.passphrase === 'string' && config.request.passphrase.length > 0) {
+  if (
+    typeof config.request.passphrase === 'string' &&
+    config.request.passphrase.length > 0
+  ) {
     defaults.passphrase = config.request.passphrase;
   }
 
@@ -54,26 +57,38 @@ function startup(logger) {
 }
 
 function _setupRegexBlocklists(options) {
-  if (options.domainBlocklistRegex !== previousDomainRegexAsString && options.domainBlocklistRegex.length === 0) {
+  if (
+    options.domainBlocklistRegex !== previousDomainRegexAsString &&
+    options.domainBlocklistRegex.length === 0
+  ) {
     Logger.debug('Removing Domain Blocklist Regex Filtering');
     previousDomainRegexAsString = '';
     domainBlocklistRegex = null;
   } else {
     if (options.domainBlocklistRegex !== previousDomainRegexAsString) {
       previousDomainRegexAsString = options.domainBlocklistRegex;
-      Logger.debug({ domainBlocklistRegex: previousDomainRegexAsString }, 'Modifying Domain Blocklist Regex');
+      Logger.debug(
+        { domainBlocklistRegex: previousDomainRegexAsString },
+        'Modifying Domain Blocklist Regex'
+      );
       domainBlocklistRegex = new RegExp(options.domainBlocklistRegex, 'i');
     }
   }
 
-  if (options.ipBlocklistRegex !== previousIpRegexAsString && options.ipBlocklistRegex.length === 0) {
+  if (
+    options.ipBlocklistRegex !== previousIpRegexAsString &&
+    options.ipBlocklistRegex.length === 0
+  ) {
     Logger.debug('Removing IP Blocklist Regex Filtering');
     previousIpRegexAsString = '';
     ipBlocklistRegex = null;
   } else {
     if (options.ipBlocklistRegex !== previousIpRegexAsString) {
       previousIpRegexAsString = options.ipBlocklistRegex;
-      Logger.debug({ ipBlocklistRegex: previousIpRegexAsString }, 'Modifying IP Blocklist Regex');
+      Logger.debug(
+        { ipBlocklistRegex: previousIpRegexAsString },
+        'Modifying IP Blocklist Regex'
+      );
       ipBlocklistRegex = new RegExp(options.ipBlocklistRegex, 'i');
     }
   }
@@ -91,6 +106,35 @@ function getQuery(entity) {
   }
 }
 
+async function getScreenshotAsBase64(imageUrl) {
+  const requestOptions = {
+    uri: imageUrl,
+    encoding: null,
+    method: 'get'
+  };
+
+  return new Promise((resolve, reject) => {
+    requestWithDefaults(requestOptions, (error, response, body) => {
+      if (error) {
+        return reject(error);
+      }
+
+      if (response.statusCode !== 200) {
+        return reject({
+          detail: 'Unexpected status code when downloading screenshot from urlscan',
+          response
+        });
+      }
+      const data =
+        'data:' +
+        response.headers['content-type'] +
+        ';base64,' +
+        Buffer.from(body).toString('base64');
+      resolve(data);
+    });
+  });
+}
+
 function doLookup(entities, options, cb) {
   let lookupResults = [];
   let tasks = [];
@@ -101,7 +145,6 @@ function doLookup(entities, options, cb) {
 
   entities.forEach((entity) => {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-
       tasks.push(function (done) {
         async.waterfall(
           [
@@ -109,7 +152,11 @@ function doLookup(entities, options, cb) {
               searchIndicator(entity, options, next);
             },
             function (result, next) {
-              if (!_isMiss(result.body) && result.body.results[0] && result.body.results[0].result) {
+              if (
+                !_isMiss(result.body) &&
+                result.body.results[0] &&
+                result.body.results[0].result
+              ) {
                 let uri = result.body.results[0].result;
                 getVerdicts(uri, entity, options, (err, { refererLinks, verdicts }) => {
                   if (err) return next(err);
@@ -122,9 +169,21 @@ function doLookup(entities, options, cb) {
               } else {
                 next(null, result);
               }
+            },
+            async function (result) {
+              if (options.downloadScreenshot) {
+                const screenshot = await getScreenshotAsBase64(
+                  result.body.results[0].screenshot
+                );
+                result.body.results[0].screenshotBase64 = screenshot;
+              }
+              return result;
             }
           ],
           (err, result) => {
+            if (err) {
+              Logger.error(err, 'doLookup Error');
+            }
             done(err, result);
           }
         );
@@ -189,7 +248,9 @@ function doLookup(entities, options, cb) {
                   ...result.body,
                   searchLimitTag:
                     dailySearchLimit.percentage > 50 &&
-                    `${dailySearchLimit.limit - dailySearchLimit.used}/${dailySearchLimit.limit}`
+                    `${dailySearchLimit.limit - dailySearchLimit.used}/${
+                      dailySearchLimit.limit
+                    }`
                 }
               }
             });
@@ -202,7 +263,6 @@ function doLookup(entities, options, cb) {
     );
   });
 }
-
 
 function getIsMalicious(result) {
   if (
@@ -252,21 +312,21 @@ function getVerdicts(uri, entity, options, cb) {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
-    
+
     if (parsedResult.error) {
       cb(parsedResult.error, {});
     } else {
       cb(null, {
         refererLinks: _getRefererLinks(body),
-        verdicts: body.verdicts,
+        verdicts: body.verdicts
       });
     }
   });
 }
 
 const _getRefererLinks = fp.flow(
-  fp.getOr([], "data.requests"),
-  fp.map(fp.getOr(false, "request.request.headers.Referer")),
+  fp.getOr([], 'data.requests'),
+  fp.map(fp.getOr(false, 'request.request.headers.Referer')),
   fp.compact,
   fp.uniq
 );
@@ -282,7 +342,7 @@ function _handleErrors(entity, err, response, body) {
   }
 
   let result;
-  if(response) {
+  if (response) {
     if (response.statusCode === 200) {
       // we got data!
       result = {
@@ -350,7 +410,7 @@ function _isInvalidEntity(entity) {
     }
   }
 
-  if(entity.isURL && entity.requestContext.requestType !== 'OnDemand') {
+  if (entity.isURL && entity.requestContext.requestType !== 'OnDemand') {
     return true;
   }
 
@@ -397,7 +457,6 @@ function _isEntityBlocklisted(entity, options) {
 
 const _isMiss = (body) => !body || !body.results;
 
-
 const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
   const requestOptions = {
     uri: `${API_URL}/v1/scan/`,
@@ -424,30 +483,32 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
-    
+
     if (parsedResult.error) {
       cb({ errors: [parsedResult.error] });
     } else {
-      const { data: { body } } = parsedResult;
+      const {
+        data: { body }
+      } = parsedResult;
       cb(null, {
         ...body,
-        results: [{
-          justSubmitted: true,
-          _id: body.uuid,
-          task: {
-            visibility: body.visibility
-          },
-          page: {
-            domain: entity.value,
-            url: body.url
+        results: [
+          {
+            justSubmitted: true,
+            _id: body.uuid,
+            task: {
+              visibility: body.visibility
+            },
+            page: {
+              domain: entity.value,
+              url: body.url
+            }
           }
-        }]
+        ]
       });
-      
     }
   });
 };
-
 
 module.exports = {
   doLookup,

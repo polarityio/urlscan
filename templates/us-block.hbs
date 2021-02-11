@@ -87,7 +87,11 @@
             <span class="p-title">{{fa-icon "browser" fixedWidth=true}} Screenshot</span>
             {{#if result._id}}
                 <div class="image-container">
-                    <img src="https://urlscan.io/screenshots/{{result._id}}.png">
+                    {{#if result.getScreenshotAsBase64}}
+                      <img src="{{result.getScreenshotAsBase64}}"/>
+                    {{else}}
+                      <img src="{{result.screenshot}}">
+                    {{/if}}
                 </div>
                 <div>
                     <span class="p-key">Screenshot URL: </span>
