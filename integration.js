@@ -252,7 +252,7 @@ function getVerdicts(uri, entity, options, cb) {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
-    
+
     if (parsedResult.error) {
       cb(parsedResult.error, {});
     } else {
@@ -424,7 +424,7 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
-    
+
     if (parsedResult.error) {
       cb({ errors: [parsedResult.error] });
     } else {
@@ -443,14 +443,42 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
           }
         }]
       });
-      
+
     }
   });
 };
+
+function validateOptions(userOptions, cb){
+  let errors = [];
+  if (typeof userOptions.domainBlocklistRegex.value === 'string' && userOptions.domainBlocklistRegex.value.length > 0){
+    try{
+      new RegExp(userOptions.domainBlocklistRegex.value, 'i');
+    }catch(e){
+      errors.push({
+        key: 'domainBlocklistRegex',
+        message: 'You must provide a valid regular expression (do not surround your regex in forward slashes)'
+      });
+    }
+  }
+
+  if (typeof userOptions.ipBlocklistRegex.value === 'string' && userOptions.ipBlocklistRegex.value.length > 0){
+    try{
+      new RegExp(userOptions.ipBlocklistRegex.value, 'i');
+    }catch(e){
+      errors.push({
+        key: 'ipBlocklistRegex',
+        message: 'You must provide a valid regular expression (do not surround your regex in forward slashes)'
+      });
+    }
+  }
+
+  cb(null, errors);
+}
 
 
 module.exports = {
   doLookup,
   startup,
-  onMessage: submitUrl
+  onMessage: submitUrl,
+  validateOptions
 };
