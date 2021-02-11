@@ -188,7 +188,7 @@ function doLookup(entities, options, cb) {
                 details: {
                   ...result.body,
                   searchLimitTag:
-                    dailySearchLimit.percentage > 50 &&
+                    dailySearchLimit && dailySearchLimit.percent > 75 &&
                     `${dailySearchLimit.limit - dailySearchLimit.used}/${dailySearchLimit.limit}`
                 }
               }
@@ -252,7 +252,7 @@ function getVerdicts(uri, entity, options, cb) {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
-    
+
     if (parsedResult.error) {
       cb(parsedResult.error, {});
     } else {
@@ -424,7 +424,7 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
-    
+
     if (parsedResult.error) {
       cb({ errors: [parsedResult.error] });
     } else {
@@ -443,7 +443,7 @@ const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
           }
         }]
       });
-      
+
     }
   });
 };
