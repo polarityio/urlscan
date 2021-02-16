@@ -40,6 +40,10 @@ This option allows you to specify a regex to used to ignore domains.  Any domain
 
 This option allows you to specify a regex used to ignore IPv4 Addresses.  Any IPv4 matching the regex will not be searched.
 
+### Proxy Screenshots through Polarity Server
+
+If checked, the Overlay Window will receive the URL\'s screenshot from the Polarity server rather than directly from the urlscan website. If your screenshot images are not properly displaying try enabling this option as it can resolve issues in some environments with unsupported web proxy configurations on the client.
+
 ## Installation Instructions
 
 Installation instructions for integrations are provided on the [PolarityIO GitHub Page](https://polarityio.github.io/).
