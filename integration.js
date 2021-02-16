@@ -119,9 +119,13 @@ async function getScreenshotAsBase64(imageUrl) {
         return reject(error);
       }
 
-      if (response.statusCode !== 200) {
+      if (
+        ![200, 404].includes(response.statusCode) &&
+        !(body && Buffer.from(body).toString('base64').length)
+      ) {
         return reject({
-          detail: 'Unexpected status code when downloading screenshot from urlscan',
+          detail:
+            'Unexpected status code or Image Not Found when downloading screenshot from urlscan',
           response
         });
       }
@@ -130,6 +134,7 @@ async function getScreenshotAsBase64(imageUrl) {
         response.headers['content-type'] +
         ';base64,' +
         Buffer.from(body).toString('base64');
+
       resolve(data);
     });
   });
@@ -171,7 +176,10 @@ function doLookup(entities, options, cb) {
               }
             },
             async function (result) {
-              if (options.downloadScreenshot) {
+              if (
+                options.downloadScreenshot &&
+                fp.get('body.results.0.screenshot', result)
+              ) {
                 const screenshot = await getScreenshotAsBase64(
                   result.body.results[0].screenshot
                 );

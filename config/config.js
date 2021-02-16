@@ -146,7 +146,7 @@ module.exports = {
     },
     {
       key: 'downloadScreenshot',
-      name: 'Proxy screenshots through Polarity Server',
+      name: 'Proxy Screenshots through Polarity Server',
       description:
         'If checked, the Overlay Window will receive the URL\'s screenshot from the Polarity server rather than directly from the urlscan website. If your screenshot images are not properly displaying try enabling this option as it can resolve issues in some environments with unsupported web proxy configurations on the client.',
       default: false,
