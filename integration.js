@@ -255,10 +255,8 @@ function doLookup(entities, options, cb) {
                 details: {
                   ...result.body,
                   searchLimitTag:
-                    dailySearchLimit.percentage > 50 &&
-                    `${dailySearchLimit.limit - dailySearchLimit.used}/${
-                      dailySearchLimit.limit
-                    }`
+                    dailySearchLimit && dailySearchLimit.percent > 75 &&
+                    `${dailySearchLimit.limit - dailySearchLimit.used}/${dailySearchLimit.limit}`
                 }
               }
             });
