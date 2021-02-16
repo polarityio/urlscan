@@ -22,7 +22,8 @@ module.exports = {
    * @type String
    * @optional
    */
-  description: 'Searches the urlscan.io API and returns results from the most recent, relevant scan',
+  description:
+    'Searches the urlscan.io API and returns results from the most recent, relevant scan',
   entityTypes: ['IPv4', 'IPv6', 'IPv4CIDR', 'domain', 'url', 'sha256'],
   onDemandOnly: true,
   /**
@@ -128,8 +129,7 @@ module.exports = {
     {
       key: 'domainBlocklistRegex',
       name: 'Ignored Domain Regex',
-      description:
-        'Domains that match the given regex will not be looked up.',
+      description: 'Domains that match the given regex will not be looked up.',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -143,6 +143,16 @@ module.exports = {
       type: 'text',
       userCanEdit: false,
       adminOnly: false
+    },
+    {
+      key: 'downloadScreenshot',
+      name: 'Proxy Screenshots through Polarity Server',
+      description:
+        'If checked, the Overlay Window will receive the URL\'s screenshot from the Polarity server rather than directly from the urlscan website. If your screenshot images are not properly displaying try enabling this option as it can resolve issues in some environments with unsupported web proxy configurations on the client.',
+      default: false,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
     }
   ]
 };
