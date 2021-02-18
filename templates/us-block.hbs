@@ -87,8 +87,8 @@
             <span class="p-title">{{fa-icon "browser" fixedWidth=true}} Screenshot</span>
             {{#if result._id}}
                 <div class="image-container">
-                    {{#if result.getScreenshotAsBase64}}
-                      <img src="{{result.getScreenshotAsBase64}}"/>
+                    {{#if result.screenshotBase64}}
+                      <img src="{{result.screenshotBase64}}"/>
                     {{else}}
                       <img src="{{result.screenshot}}">
                     {{/if}}
