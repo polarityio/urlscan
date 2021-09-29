@@ -15,7 +15,11 @@ polarity.export = PolarityComponent.extend({
       this.set('isRunning', true);
 
       this.sendIntegrationMessage({
-        data: { entity: this.entity, tags: this.tags, submitAsPublic: this.submitAsPublic }
+        data: {
+          entity: this.entity,
+          tags: this.tags,
+          submitAsPublic: this.submitAsPublic
+        }
       })
         .then((newDetails) => {
           outerThis.set('message', newDetails.message || 'Success!');
@@ -24,7 +28,13 @@ polarity.export = PolarityComponent.extend({
         .catch((err) => {
           outerThis.set(
             'errorMessage',
-            `Failed to Submit: ${err.detail || err.message || err.title || err.description || 'Unknown Reason'}`
+            `Failed to Submit: ${
+              err.detail ||
+              err.message ||
+              err.title ||
+              err.description ||
+              'Unknown Reason'
+            }`
           );
         })
         .finally(() => {
