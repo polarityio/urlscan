@@ -5,7 +5,7 @@ const { doLookup, startup } = require('../integration');
 jest.setTimeout(5000);
 
 const options = {
-  apiKey: '3e34ed47-d69d-4ae6-bae9-4e33d743ebff',
+  apiKey: '',
   submitUrl: '',
   maliciousOnly: false,
   blocklist: '',
