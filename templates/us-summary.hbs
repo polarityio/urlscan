@@ -1,69 +1,123 @@
-{{#if details.canSubmitUrl}}
-    <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
-        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-        <span class="integration-text-color">Not Found</span>
+{{#if
+  (or
+    details.isConnectionReset
+    details.maxRequestQueueLimitHit
+    details.isGatewayTimeout
+    details.summaryTag
+  )
+}}
+  <span
+    {{on 'click' (optional this.scrollToIntegration)}}
+    class='integration-summary-tag integration-background-color integration-border-color'
+  >
+    <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+    <span class='integration-text-color'>
+      {{fa-icon icon='exclamation-circle' fixedWidth=true class='summary-tag-icon'}}
+      {{#if details.summaryTag}}
+        {{details.summaryTag}}
+      {{else}}
+        Search Limit Reached
+      {{/if}}
     </span>
+  </span>
 {{else}}
-    <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
-        <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-        <span class="integration-text-color">
+  {{#if details.canSubmitUrl}}
+    <span
+      {{on 'click' (optional this.scrollToIntegration)}}
+      class='integration-summary-tag integration-background-color integration-border-color'
+    >
+      <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+      <span class='integration-text-color'>Not Found</span>
+    </span>
+  {{else}}
+    <span
+      {{on 'click' (optional this.scrollToIntegration)}}
+      class='integration-summary-tag integration-background-color integration-border-color'
+    >
+      <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+      <span class='integration-text-color'>
         {{#if overallVerdict.malicious}}
-            Malicious
+          Malicious
         {{else}}
-            Not Malicious
+          Not Malicious
         {{/if}}
-        </span>
+      </span>
     </span>
 
     {{#if (or overallVerdict.score (eq overallVerdict.score 0))}}
-        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
-            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-            <span class="integration-text-color">
-                Score: {{if (eq overallVerdict.score 0) "0" overallVerdict.score}}
-            </span>
+      <span
+        {{on 'click' (optional this.scrollToIntegration)}}
+        class='integration-summary-tag integration-background-color integration-border-color'
+      >
+        <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+        <span class='integration-text-color'>
+          Score:
+          {{if (eq overallVerdict.score 0) '0' overallVerdict.score}}
         </span>
+      </span>
     {{/if}}
 
-    {{#each overallVerdict.tags as | tag |}}
-        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
-            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-            <span class="integration-text-color">
-                {{fa-icon "tag" fixedWidth=true}} {{tag}}
-            </span>
+    {{#each overallVerdict.tags as |tag|}}
+      <span
+        {{on 'click' (optional this.scrollToIntegration)}}
+        class='integration-summary-tag integration-background-color integration-border-color'
+      >
+        <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+        <span class='integration-text-color'>
+          {{fa-icon 'tag' fixedWidth=true}}
+          {{tag}}
         </span>
+      </span>
     {{/each}}
 
-    {{#each overallVerdict.categories as | tag |}}
-        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
-            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-            <span class="integration-text-color">
-                {{fa-icon "boxes" fixedWidth=true}} {{tag}}
-            </span>
+    {{#each overallVerdict.categories as |tag|}}
+      <span
+        {{on 'click' (optional this.scrollToIntegration)}}
+        class='integration-summary-tag integration-background-color integration-border-color'
+      >
+        <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+        <span class='integration-text-color'>
+          {{fa-icon 'boxes' fixedWidth=true}}
+          {{tag}}
         </span>
+      </span>
     {{/each}}
 
-    {{#each overallVerdict.brands as | brand |}}
-        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
-            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-            <span class="integration-text-color">
-                {{fa-icon "copyright" fixedWidth=true}} {{brand}}
-            </span>
+    {{#each overallVerdict.brands as |brand|}}
+      <span
+        {{on 'click' (optional this.scrollToIntegration)}}
+        class='integration-summary-tag integration-background-color integration-border-color'
+      >
+        <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+        <span class='integration-text-color'>
+          {{fa-icon 'copyright' fixedWidth=true}}
+          {{brand}}
         </span>
+      </span>
     {{/each}}
     {{#if details.total}}
-        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
-            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-            <span class="integration-text-color">
-                Results: {{details.total}}
-            </span>
+      <span
+        {{on 'click' (optional this.scrollToIntegration)}}
+        class='integration-summary-tag integration-background-color integration-border-color'
+      >
+        <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+        <span class='integration-text-color'>
+          Results:
+          {{details.total}}
         </span>
+      </span>
     {{/if}}
     {{#if details.searchLimitTag}}
-        <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
-            <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-            <span class="integration-text-color">
-                Daily Searches Remaining: {{details.searchLimitTag}}
-            </span>
+      <span
+        {{on 'click' (optional this.scrollToIntegration)}}
+        class='integration-summary-tag integration-background-color integration-border-color'
+      >
+        <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+        <span class='integration-text-color'>
+          Daily Searches Remaining:
+          {{details.searchLimitTag}}
         </span>
+      </span>
     {{/if}}
+  {{/if}}
 {{/if}}
