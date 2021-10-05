@@ -7,6 +7,27 @@ polarity.export = PolarityComponent.extend({
   submitAsPublic: false,
   tags: '',
   actions: {
+    retryLookup: function () {
+      this.set('running', true);
+      this.set('errorMessage', '');
+
+      const payload = {
+        action: 'RETRY_LOOKUP',
+        entity: this.get('block.entity')
+      };
+
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          if (result.data.summary) this.set('summary', result.summary);
+          this.set('block.data', result.data);
+        })
+        .catch((err) => {
+          this.set('details.errorMessage', JSON.stringify(err, null, 4));
+        })
+        .finally(() => {
+          this.set('running', false);
+        });
+    },
     submitUrl: function () {
       const outerThis = this;
 
@@ -14,7 +35,13 @@ polarity.export = PolarityComponent.extend({
       this.set('errorMessage', '');
       this.set('isRunning', true);
 
+      const payload = {
+        action: 'SUBMIT_URL',
+        entity: this.get('block.entity')
+      };
+
       this.sendIntegrationMessage({
+        payload,
         data: {
           entity: this.entity,
           tags: this.tags,
