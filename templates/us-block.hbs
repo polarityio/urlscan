@@ -1,298 +1,329 @@
-{{!-- {{#if details.canSubmitUrl}} --}}
-{{!-- <span class="p-title">{{fa-icon "info-circle" fixedWidth=false}} Submit URL to urlscan</span>
+{{#if details.canSubmitUrl}}
+  <span class='p-title'>{{fa-icon 'info-circle' fixedWidth=false}}
+    Submit URL to urlscan</span>
+  <div>
     <div>
-        <div>
-            <span class="p-key">If you would like, you can submit this url to urlscan.</span>
-            <hr class="submit-line" />
-        </div>
-        <div class="input-wrapper">
-            <span class="p-value">
-                {{input
-                    class="submit-as-public-checkbox"
-                    type="checkbox"
-                    checked=submitAsPublic
-                    disabled=isRunning
-                }}
-            </span>
-            <span class="p-key"> &nbsp;Submit URL as Public</span>
-        </div>
-        <div class="input-wrapper d-flex flex-row align-items-center">
-            <span class="p-key">Tags: &nbsp; </span>
-            <span class="p-value">
-                {{input
-                    class="tags-input mr-3 w-100"
-                    type="text"
-                    oninput=tags
-                    placeholder="Comma separated list..."
-                    value=tags
-                    disabled=isRunning
-                }}
-            </span>
-        </div>
+      <span class='p-key'>If you would like, you can submit this url to urlscan.</span>
+      <hr class='submit-line' />
     </div>
-    <div class="d-flex flex-row justify-content-between align-items-center">
-        <div>
-            {{#if isRunning}}
-                {{fa-icon "spinner-third" fixedWidth=true spin=true}} Submitting
-            {{/if}}
-        </div>
+    <div class='input-wrapper'>
+      <span class='p-value'>
+        {{input
+          class='submit-as-public-checkbox'
+          type='checkbox'
+          checked=submitAsPublic
+          disabled=isRunning
+        }}
+      </span>
+      <span class='p-key'> &nbsp;Submit URL as Public</span>
+    </div>
+    <div class='input-wrapper d-flex flex-row align-items-center'>
+      <span class='p-key'>Tags: &nbsp; </span>
+      <span class='p-value'>
+        {{input
+          class='tags-input mr-3 w-100'
+          type='text'
+          oninput=tags
+          placeholder='Comma separated list...'
+          value=tags
+          disabled=isRunning
+        }}
+      </span>
+    </div>
+  </div>
+  <div class='d-flex flex-row justify-content-between align-items-center'>
+    <div>
+      {{#if isRunning}}
+        {{fa-icon 'spinner-third' fixedWidth=true spin=true}}
+        Submitting
+      {{/if}}
+    </div>
+    <button
+      {{action 'submitUrl'}}
+      class='p-btn btn btn-light mt-1'
+      disabled={{isRunning}}
+    >
+      Submit
+    </button>
+  </div>
+  {{#if message}}
+    <div class='alert alert-info mt-1'>
+      {{message}}
+    </div>
+  {{/if}}
+{{else}}
+  {{#if details.errorMessage}}
+    <div class='mt-2'>
+      {{! Can optionally use the 'allowRetry' boolean flag in details to disable retry logic }}
+      {{#if (not (eq details.allowRetry false))}}
         <button
-            {{action "submitUrl"}}
-            class="p-btn btn btn-light mt-1"
-            disabled={{isRunning}}
+          type='button'
+          class='p-btn btn btn-sm btn-polarity retry-btn'
+          {{action 'retryLookup'}}
         >
-            Submit
+          {{#if running}}
+            {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+          {{else}}
+            Retry Search
+          {{/if}}
         </button>
+        <div class='mt-1'>
+          {{details.errorMessage}}
+        </div>
+        <div class='mt-1'>
+          <span class='p-footnote'>
+            You can retry your search by pressing the "Retry Search" button.</span>
+        </div>
+      {{/if}}
     </div>
-    {{#if message}}
-        <div class="alert alert-info mt-1">
-            {{message}}
-        </div>
-    {{/if}}
-    {{#if errorMessage}}
-        <div class="alert alert-danger mt-1">
-            {{errorMessage}}
-        </div>
-    {{/if}}
-{{else}} --}}
-{{#each data.details as |result|}}
-  <div class='mb-1'>
-    {{#if result.justSubmitted}}
-      <div class='note'>
-        <span class='p-key'>
-          <span class='p-value'>NOTE:</span>
-          With this URL recently being submitted, the urlscan Details and the Screenshot
-          URL might be temporarily unavailable.
-        </span>
-      </div>
-    {{/if}}
-    {{#if result._id}}
-      <div>
-        <span class='p-value'>
-          <a href='https://urlscan.io/result/{{result._id}}'>
-            View in urlscan
-            {{fa-icon 'external-link-square' class='external-link-icon'}}
-          </a>
-        </span>
-      </div>
-    {{/if}}
-    {{#if
-      (and
-        result.justSubmitted
-        result.task
-        result.task.visibility
-        (eq result.task.visibility 'private')
-      )
-    }}
-      <div class='note private'>
-        <span class='p-key'>
-          <span class='p-value'>NOTE:</span>
-          As a private submission the scan result is not searchable. Please save this link
-          for your future reference or login to your account to view your private
-          submissions. The result page may not be immediately available.
-        </span>
-      </div>
-    {{/if}}
-    <span class='p-title'>{{fa-icon 'browser' fixedWidth=true}} Screenshot</span>
-    {{#if result._id}}
-      <div class='image-container'>
-        {{#if result.screenshotBase64}}
-          <img src='{{result.screenshotBase64}}' />
-        {{else}}
-          <img src='{{result.screenshot}}' />
-        {{/if}}
-      </div>
-      <div>
-        <span class='p-key'>Screenshot URL: </span>
-        <span class='p-value'>
-          <a class='p-link' href='https://urlscan.io/screenshots/{{result._id}}.png'>
-            https://urlscan.io/screenshots/{{result._id}}.png
-          </a>
-        </span>
-      </div>
-    {{/if}}
+  {{else}}
+    {{#if details}}
+      {{#each details.results as |result|}}
+        <div class='mb-1'>
+          {{#if result.justSubmitted}}
+            <div class='note'>
+              <span class='p-key'>
+                <span class='p-value'>NOTE:</span>
+                With this URL recently being submitted, the urlscan Details and the
+                Screenshot URL might be temporarily unavailable.
+              </span>
+            </div>
+          {{/if}}
+          {{#if result._id}}
+            <div>
+              <span class='p-value'>
+                <a href='https://urlscan.io/result/{{result._id}}'>
+                  View in urlscan
+                  {{fa-icon 'external-link-square' class='external-link-icon'}}
+                </a>
+              </span>
+            </div>
+          {{/if}}
+          {{#if
+            (and
+              result.justSubmitted
+              result.task
+              result.task.visibility
+              (eq result.task.visibility 'private')
+            )
+          }}
+            <div class='note private'>
+              <span class='p-key'>
+                <span class='p-value'>NOTE:</span>
+                As a private submission the scan result is not searchable. Please save
+                this link for your future reference or login to your account to view your
+                private submissions. The result page may not be immediately available.
+              </span>
+            </div>
+          {{/if}}
+          <span class='p-title'>{{fa-icon 'browser' fixedWidth=true}} Screenshot</span>
+          {{#if result._id}}
+            <div class='image-container'>
+              {{#if result.screenshotBase64}}
+                <img src='{{result.screenshotBase64}}' />
+              {{else}}
+                <img src='{{result.screenshot}}' />
+              {{/if}}
+            </div>
+            <div>
+              <span class='p-key'>Screenshot URL: </span>
+              <span class='p-value'>
+                <a
+                  class='p-link'
+                  href='https://urlscan.io/screenshots/{{result._id}}.png'
+                >
+                  https://urlscan.io/screenshots/{{result._id}}.png
+                </a>
+              </span>
+            </div>
+          {{/if}}
 
-    {{#if (or result.verdicts.overall.malicious result.verdicts.overall.score)}}
-      <h1 class='p-title'>
-        {{fa-icon 'gavel' fixedWidth=true}}
-        Verdicts
-      </h1>
-      {{#if result.verdicts.overall.malicious}}
-        <div>
-          <span
-            class='p-key {{if result.verdicts.overall.malicious 'malicious'}}'
-          >Malicious: </span>
-          <span
-            class='p-value {{if result.verdicts.overall.malicious 'malicious'}}'
-          >{{result.verdicts.overall.malicious}}</span>
+          {{#if (or result.verdicts.overall.malicious result.verdicts.overall.score)}}
+            <h1 class='p-title'>
+              {{fa-icon 'gavel' fixedWidth=true}}
+              Verdicts
+            </h1>
+            {{#if result.verdicts.overall.malicious}}
+              <div>
+                <span
+                  class='p-key {{if result.verdicts.overall.malicious 'malicious'}}'
+                >Malicious: </span>
+                <span
+                  class='p-value {{if result.verdicts.overall.malicious 'malicious'}}'
+                >{{result.verdicts.overall.malicious}}</span>
+              </div>
+            {{/if}}
+            {{#if result.verdicts.overall.score}}
+              <div>
+                <span class='p-key'>Overall Score: </span>
+                <span class='p-value'>{{result.verdicts.overall.score}}</span>
+              </div>
+            {{/if}}
+            {{#if result.verdicts.overall.categories}}
+              <div>
+                <span class='p-key'>Categories: </span>
+                {{#each result.verdicts.overall.categories as |category|}}
+                  <span class='list-item'>{{category}}</span>
+                {{/each}}
+              </div>
+            {{/if}}
+            {{#if result.verdicts.overall.brands}}
+              <div>
+                <span class='p-key'>Brands: </span>
+                {{#each result.verdicts.overall.brands as |brand|}}
+                  <span class='list-item'>{{brand}}</span>
+                {{/each}}
+              </div>
+            {{/if}}
+
+            {{#if result.verdicts.overall.tags}}
+              <h1 class='p-title'>
+                {{fa-icon 'tags' fixedWidth=true}}
+                Tags
+              </h1>
+              <div>
+                {{#each result.verdicts.overall.tags as |tag|}}
+                  <span
+                    class='tag {{if result.verdicts.overall.malicious 'malicious'}}'
+                  >{{tag}}</span>
+                {{/each}}
+              </div>
+            {{/if}}
+          {{/if}}
+          {{#if result.task}}
+            <h1 class='p-title'>
+              {{fa-icon 'scanner' fixedWidth=true}}
+              Scan Information
+            </h1>
+          {{/if}}
+
+          {{#if result.task.time}}
+            <div>
+              <span class='p-key'>Result Time: </span>
+              <span class='p-value'>{{result.task.time}}</span>
+            </div>
+          {{/if}}
+
+          {{#if result.task.source}}
+            <div>
+              <span class='p-key'>Result Source: </span>
+              <span class='p-value'>{{result.task.source}}</span>
+            </div>
+          {{/if}}
+
+          {{#if result.task.visibility}}
+            <div>
+              <span class='p-key'>Visibility: </span>
+              <span class='p-value'>{{result.task.visibility}}</span>
+            </div>
+          {{/if}}
+
+          {{#if
+            (and
+              result.stats
+              (or
+                result.stats.uniqIPs
+                result.stats.consoleMsgs
+                result.stats.dataLength
+                result.stats.encodedDataLength
+              )
+            )
+          }}
+            <h1 class='p-title'>
+              {{fa-icon 'chart-line' fixedWidth=true}}
+              Site Statistics
+            </h1>
+            {{#if result.stats.uniqIPs}}
+              <div>
+                <span class='p-key'>Unique IPs: </span>
+                <span class='p-value'>{{result.stats.uniqIPs}}</span>
+              </div>
+            {{/if}}
+            {{#if result.stats.consoleMsgs}}
+              <div>
+                <span class='p-key'>Console Messages: </span>
+                <span class='p-value'>{{result.stats.consoleMsgs}}</span>
+              </div>
+            {{/if}}
+            {{#if result.stats.dataLength}}
+              <div>
+                <span class='p-key'>Total Data Length: </span>
+                <span class='p-value'>{{result.stats.dataLength}}</span>
+              </div>
+            {{/if}}
+            {{#if result.stats.encodedDataLength}}
+              <div>
+                <span class='p-key'>Encoded Data Length: </span>
+                <span class='p-value'>{{result.stats.encodedDataLength}}</span>
+              </div>
+            {{/if}}
+          {{/if}}
+
+          {{#if result.page}}
+            <h1 class='p-title'>
+              {{fa-icon 'info' fixedWidth=true}}
+              Site Information
+            </h1>
+          {{/if}}
+
+          {{#if result.page.domain}}
+            <div>
+              <span class='p-key'>Domain: </span>
+              <span class='p-value'>{{result.page.domain}}</span>
+            </div>
+          {{/if}}
+          {{#if result.page.url}}
+            <div>
+              <span class='p-key'>URL: </span>
+              <span class='p-value'>{{result.page.url}}</span>
+            </div>
+          {{/if}}
+          {{#if result.page.ip}}
+            <div>
+              <span class='p-key'>IP: </span>
+              <span class='p-value'>{{result.page.ip}}</span>
+            </div>
+          {{/if}}
+          {{#if result.page.country}}
+            <div>
+              <span class='p-key'>Country: </span>
+              <span class='p-value'>{{result.page.country}}</span>
+            </div>
+          {{/if}}
+          {{#if result.page.city}}
+            <div>
+              <span class='p-key'>City: </span>
+              <span class='p-value'>{{result.page.city}}</span>
+            </div>
+          {{/if}}
+          {{#if result.page.asnname}}
+            <div>
+              <span class='p-key'>ASN Name: </span>
+              <span class='p-value'>{{result.page.asnname}}</span>
+            </div>
+          {{/if}}
+          {{#if result.page.asn}}
+            <div>
+              <span class='p-key'>ASN: </span>
+              <span class='p-value'>{{result.page.asn}}</span>
+            </div>
+          {{/if}}
         </div>
-      {{/if}}
-      {{#if result.verdicts.overall.score}}
-        <div>
-          <span class='p-key'>Overall Score: </span>
-          <span class='p-value'>{{result.verdicts.overall.score}}</span>
-        </div>
-      {{/if}}
-      {{#if result.verdicts.overall.categories}}
-        <div>
-          <span class='p-key'>Categories: </span>
-          {{#each result.verdicts.overall.categories as |category|}}
-            <span class='list-item'>{{category}}</span>
+      {{/each}}
+
+      {{#if (and details.refererLinks details.refererLinks.length)}}
+        <div class='p-title'>{{fa-icon 'link'}}
+          Referred To URLs ({{details.refererLinks.length}}):</div>
+        <div class='wrap-container'>
+          {{#each details.refererLinks as |link|}}
+            <span class='link-container'>{{link}}</span>
           {{/each}}
         </div>
       {{/if}}
-      {{#if result.verdicts.overall.brands}}
-        <div>
-          <span class='p-key'>Brands: </span>
-          {{#each result.verdicts.overall.brands as |brand|}}
-            <span class='list-item'>{{brand}}</span>
-          {{/each}}
-        </div>
-      {{/if}}
-
-      {{#if result.verdicts.overall.tags}}
-        <h1 class='p-title'>
-          {{fa-icon 'tags' fixedWidth=true}}
-          Tags
-        </h1>
-        <div>
-          {{#each result.verdicts.overall.tags as |tag|}}
-            <span
-              class='tag {{if result.verdicts.overall.malicious 'malicious'}}'
-            >{{tag}}</span>
-          {{/each}}
-        </div>
-      {{/if}}
+    {{else}}
+      No Results Found in
+      {{block.name}}
+      for this entity
     {{/if}}
-    {{#if result.task}}
-      <h1 class='p-title'>
-        {{fa-icon 'scanner' fixedWidth=true}}
-        Scan Information
-      </h1>
-    {{/if}}
-
-    {{#if result.task.time}}
-      <div>
-        <span class='p-key'>Result Time: </span>
-        <span class='p-value'>{{result.task.time}}</span>
-      </div>
-    {{/if}}
-
-    {{#if result.task.source}}
-      <div>
-        <span class='p-key'>Result Source: </span>
-        <span class='p-value'>{{result.task.source}}</span>
-      </div>
-    {{/if}}
-
-    {{#if result.task.visibility}}
-      <div>
-        <span class='p-key'>Visibility: </span>
-        <span class='p-value'>{{result.task.visibility}}</span>
-      </div>
-    {{/if}}
-
-    {{#if
-      (and
-        result.stats
-        (or
-          result.stats.uniqIPs
-          result.stats.consoleMsgs
-          result.stats.dataLength
-          result.stats.encodedDataLength
-        )
-      )
-    }}
-      <h1 class='p-title'>
-        {{fa-icon 'chart-line' fixedWidth=true}}
-        Site Statistics
-      </h1>
-      {{#if result.stats.uniqIPs}}
-        <div>
-          <span class='p-key'>Unique IPs: </span>
-          <span class='p-value'>{{result.stats.uniqIPs}}</span>
-        </div>
-      {{/if}}
-      {{#if result.stats.consoleMsgs}}
-        <div>
-          <span class='p-key'>Console Messages: </span>
-          <span class='p-value'>{{result.stats.consoleMsgs}}</span>
-        </div>
-      {{/if}}
-      {{#if result.stats.dataLength}}
-        <div>
-          <span class='p-key'>Total Data Length: </span>
-          <span class='p-value'>{{result.stats.dataLength}}</span>
-        </div>
-      {{/if}}
-      {{#if result.stats.encodedDataLength}}
-        <div>
-          <span class='p-key'>Encoded Data Length: </span>
-          <span class='p-value'>{{result.stats.encodedDataLength}}</span>
-        </div>
-      {{/if}}
-    {{/if}}
-
-    {{#if result.page}}
-      <h1 class='p-title'>
-        {{fa-icon 'info' fixedWidth=true}}
-        Site Information
-      </h1>
-    {{/if}}
-
-    {{#if result.page.domain}}
-      <div>
-        <span class='p-key'>Domain: </span>
-        <span class='p-value'>{{result.page.domain}}</span>
-      </div>
-    {{/if}}
-    {{#if result.page.url}}
-      <div>
-        <span class='p-key'>URL: </span>
-        <span class='p-value'>{{result.page.url}}</span>
-      </div>
-
-    {{/if}}
-    {{#if result.page.ip}}
-      <div>
-        <span class='p-key'>IP: </span>
-        <span class='p-value'>{{result.page.ip}}</span>
-      </div>
-    {{/if}}
-    {{#if result.page.country}}
-      <div>
-        <span class='p-key'>Country: </span>
-        <span class='p-value'>{{result.page.country}}</span>
-      </div>
-    {{/if}}
-    {{#if result.page.city}}
-      <div>
-        <span class='p-key'>City: </span>
-        <span class='p-value'>{{result.page.city}}</span>
-      </div>
-    {{/if}}
-    {{#if result.page.asnname}}
-      <div>
-        <span class='p-key'>ASN Name: </span>
-        <span class='p-value'>{{result.page.asnname}}</span>
-      </div>
-    {{/if}}
-    {{#if result.page.asn}}
-      <div>
-        <span class='p-key'>ASN: </span>
-        <span class='p-value'>{{result.page.asn}}</span>
-      </div>
-    {{/if}}
-  </div>
-{{/each}}
-
-{{#if (and details.refererLinks details.refererLinks.length)}}
-  <div class='p-title'>{{fa-icon 'link'}}
-    Referred To URLs ({{details.refererLinks.length}}):</div>
-  <div class='wrap-container'>
-    {{#each details.refererLinks as |link|}}
-      <span class='link-container'>{{link}}</span>
-    {{/each}}
-  </div>
+  {{/if}}
 {{/if}}
-{{!-- {{/if}} --}}
