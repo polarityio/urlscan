@@ -107,37 +107,35 @@ function getQuery(entity) {
   }
 }
 
-async function getScreenshotAsBase64(imageUrl) {
+function getScreenshotAsBase64(imageUrl, cb) {
   const requestOptions = {
     uri: imageUrl,
     encoding: null,
     method: 'get'
   };
 
-  return new Promise((resolve, reject) => {
-    requestWithDefaults(requestOptions, (error, response, body) => {
-      if (error) {
-        return reject(error);
-      }
+  requestWithDefaults(requestOptions, (error, response, body) => {
+    if (error) {
+      return reject(error);
+    }
 
-      if (
-        ![200, 404].includes(response.statusCode) &&
-        !(body && Buffer.from(body).toString('base64').length)
-      ) {
-        return reject({
-          detail:
-            'Unexpected status code or Image Not Found when downloading screenshot from urlscan',
-          response
-        });
-      }
-      const data =
-        'data:' +
-        response.headers['content-type'] +
-        ';base64,' +
-        Buffer.from(body).toString('base64');
+    if (
+      ![200, 404].includes(response.statusCode) &&
+      !(body && Buffer.from(body).toString('base64').length)
+    ) {
+      return cb({
+        detail:
+          'Unexpected status code or Image Not Found when downloading screenshot from urlscan',
+        statusCode: response.statusCode
+      });
+    }
+    const data =
+      'data:' +
+      response.headers['content-type'] +
+      ';base64,' +
+      Buffer.from(body).toString('base64');
 
-      resolve(data);
-    });
+    cb(null, data);
   });
 }
 
@@ -151,53 +149,56 @@ function _setupLimiter(options) {
 }
 
 const _getEntityLookupData = (entity, options, done) => {
-  if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-    async.waterfall(
-      [
-        function (next) {
-          searchIndicator(entity, options, next);
-        },
-        function (result, next) {
-          if (
-            result &&
-            result.body &&
-            !_isMiss(result.body) &&
-            result.body.results[0] &&
-            result.body.results[0].result
-          ) {
-            let uri = result.body.results[0].result;
-            getVerdicts(uri, entity, options, (err, verdictResults) => {
-              if (err) return next(err);
+  async.waterfall(
+    [
+      function (next) {
+        searchIndicator(entity, options, next);
+      },
+      function (result, next) {
+        if (
+          result &&
+          result.body &&
+          !_isMiss(result.body) &&
+          result.body.results[0] &&
+          result.body.results[0].result
+        ) {
+          let uri = result.body.results[0].result;
+          getVerdicts(uri, entity, options, (err, verdictResults) => {
+            if (err) return next(err);
 
-              result.body.results[0].verdicts = verdictResults.verdicts;
-              result.body.refererLinks = verdictResults.refererLinks;
+            result.body.results[0].verdicts = verdictResults.verdicts;
+            result.body.refererLinks = verdictResults.refererLinks;
 
-              next(null, result);
-            });
-          } else {
             next(null, result);
-          }
-        },
-        async function (result) {
-          if (options.downloadScreenshot && fp.get('body.results.0.screenshot', result)) {
-            const screenshot = await getScreenshotAsBase64(
-              result.body.results[0].screenshot
-            );
+          });
+        } else {
+          next(null, result);
+        }
+      },
+      function (result, next) {
+        if (options.downloadScreenshot && fp.get('body.results.0.screenshot', result)) {
+          const screenshotUrl = result.body.results[0].screenshot;
+          getScreenshotAsBase64(screenshotUrl, (err, screenshot) => {
+            if (err) {
+              return next(err);
+            }
             result.body.results[0].screenshotBase64 = screenshot;
-          }
-          return result;
+            next(null, result);
+          });
+        } else {
+          next(null, result);
         }
-      ],
-      (err, result) => {
-        if (err) {
-          Logger.error(err, 'doLookup Error');
-        }
-
-        done(err, result);
-        return;
       }
-    );
-  }
+    ],
+    (err, result) => {
+      if (err) {
+        Logger.error(err, 'doLookup Error');
+      }
+
+      done(err, result);
+      return;
+    }
+  );
 };
 
 function doLookup(entities, options, cb) {
@@ -306,15 +307,6 @@ function getIsMalicious(result) {
 }
 
 function buildLookupResults(entity, options, cb) {
-  let requestOptions = {
-    uri: `${URL}/user/quotas`,
-    method: 'GET',
-    headers: {
-      ...(options.apiKey && { 'API-Key': options.apiKey })
-    },
-    json: true
-  };
-
   _getEntityLookupData(entity, options, (err, result) => {
     if (err) {
       Logger.error(err, 'Request Error');
@@ -323,10 +315,26 @@ function buildLookupResults(entity, options, cb) {
         error: err
       });
     }
+
+    let requestOptions = {
+      uri: `${URL}/user/quotas`,
+      method: 'GET',
+      headers: {
+        ...(options.apiKey && { 'API-Key': options.apiKey })
+      },
+      json: true
+    };
+
     requestWithDefaults(requestOptions, function (error, response, body) {
       const processedResult = _handleErrors(entity, error, response, body);
 
-      if (processedResult.error) return cb(processedResult.error);
+      if (processedResult.error) {
+        return cb({
+          detail: 'Error fetching user quota',
+          error: processedResult.error
+        });
+      }
+
       if (options.maliciousOnly === true && getIsMalicious(result) === false) return;
 
       const canSubmitUrl =
