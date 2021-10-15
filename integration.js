@@ -210,6 +210,8 @@ function doLookup(entities, options, cb) {
 
   if (!limiter) _setupLimiter(options);
 
+  _setupRegexBlocklists(options);
+
   entities.forEach((entity) => {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
       hasValidIndicator = true;
@@ -220,9 +222,8 @@ function doLookup(entities, options, cb) {
 
         const statusCode = _.get(error, 'error.statusCode', '');
         const isGatewayTimeout =
-          statusCode === 502 || statusCode === 504 || statusCode === 500;
+          statusCode === 502 || statusCode === 504 || statusCode === 500;     
         const isQuotaReached = statusCode === 429;
-
         const isConnectionReset = _.get(error, 'error.error.code', '') === 'ECONNRESET';
 
         if (
@@ -477,7 +478,8 @@ function _handleErrors(entity, err, response, body) {
       result = {
         error: {
           statusCode: response.statusCode,
-          detail: `Unknown Error: No response or body found.`
+          errorMessage: body.message ? body.message : 'Bad Request',
+          description: body.description ? body.description : null
         }
       };
     }
@@ -602,6 +604,7 @@ function onMessage(payload, options, callback) {
       });
       break;
     case 'SUBMIT_URL':
+      Logger.trace({ payload }, 'onMessage');
       const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
         Logger.trace({ entity, tags, submitAsPublic }, 'submitUrl');
         const requestOptions = {
