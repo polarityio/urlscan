@@ -214,7 +214,6 @@ function doLookup(entities, options, cb) {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
       hasValidIndicator = true;
       limiter.submit(buildLookupResults, entity, options, (error, results) => {
-
         const maxRequestQueueLimitHit =
           (_.isEmpty(error) && _.isEmpty(results)) ||
           (error && error.message === 'This job has been dropped by Bottleneck');
@@ -222,10 +221,7 @@ function doLookup(entities, options, cb) {
         const statusCode = _.get(error, 'error.statusCode', '');
         const isGatewayTimeout =
           statusCode === 502 || statusCode === 504 || statusCode === 500;
-        const isRetryable =
-          results && results.data.details.allowRetry
-            ? results.data.details.allowRetry
-            : null; // 429 status has been returned
+        const isQuotaReached = statusCode === 429;
 
         const isConnectionReset = _.get(error, 'error.error.code', '') === 'ECONNRESET';
 
@@ -233,12 +229,10 @@ function doLookup(entities, options, cb) {
           maxRequestQueueLimitHit ||
           isConnectionReset ||
           isGatewayTimeout ||
-          isRetryable
+          isQuotaReached
         ) {
           if (isConnectionReset) numConnectionResets++;
           if (maxRequestQueueLimitHit) numThrottled++;
-
-          console.info('MAX2', maxRequestQueueLimitHit);
 
           lookupResults.push({
             entity,
@@ -249,7 +243,7 @@ function doLookup(entities, options, cb) {
                 maxRequestQueueLimitHit,
                 isConnectionReset,
                 isGatewayTimeout,
-                isRetryable,
+                isQuotaReached,
                 summaryTag: '! Lookup limit reached',
                 errorMessage:
                   'The search failed due to the API search limit. You can retry your search by pressing the "Retry Search" button.'
@@ -311,7 +305,6 @@ function getIsMalicious(result) {
 
 function buildLookupResults(entity, options, cb) {
   _getEntityLookupData(entity, options, (err, result) => {
-    console.info('RES', result);
     if (err) {
       Logger.error(err, 'Request Error');
       return cb({
@@ -330,9 +323,7 @@ function buildLookupResults(entity, options, cb) {
     };
 
     requestWithDefaults(requestOptions, function (error, response, body) {
-      console.info('QUOTAS:', error);
       const processedResult = _handleErrors(entity, error, response, body);
-      console.info('PRO_ERRO', processedResult)
 
       if (processedResult.error) {
         return cb({
@@ -365,15 +356,6 @@ function buildLookupResults(entity, options, cb) {
         cb(null, {
           entity: fp.get('result')(entity),
           data: null
-        });
-      } else if (result && result.allowRetry) {
-        cb(null, {
-          entity,
-          isVolatile: true,
-          data: {
-            summary: [],
-            details: { ...result }
-          }
         });
       } else {
         const dailySearchLimit = fp.get('limits.search.day')(processedResult.data.body);
@@ -413,7 +395,6 @@ function searchIndicator(entity, options, cb) {
 
   requestWithDefaults(requestOptions, function (error, response, body) {
     let parsedResult = _handleErrors(entity, error, response, body);
-    console.info('SEARCH_PARSED_RES:', parsedResult);
 
     if (parsedResult.error) {
       cb(parsedResult.error);
@@ -431,13 +412,9 @@ function getVerdicts(uri, entity, options, cb) {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
-    console.log('VERDICT_RESULT:', parsedResult);
 
     if (parsedResult.error) {
       return cb(parsedResult.error, {});
-    } else if (parsedResult.data.allowRetry) {
-      // if there is a rate limit statuscode 429
-      return cb(null, parsedResult.data);
     } else {
       cb(null, {
         refererLinks: _getRefererLinks(body),
@@ -477,8 +454,7 @@ function _handleErrors(entity, err, response, body) {
     } else if (response.statusCode === 401) {
       result = {
         error: {
-          errorMessage: 'Unauthorized',
-          allowRetry: false
+          errorMessage: 'Unauthorized'
         }
       };
     } else if (response.statusCode === 404) {
@@ -487,14 +463,6 @@ function _handleErrors(entity, err, response, body) {
         data: {
           entity: entity,
           body: null
-        }
-      };
-    } else if (response.statusCode === 429) {
-      result = {
-        error: null,
-        data: {
-          errorMessage: fp.get('message')(body) || 'Rate Limit Reached.',
-          allowRetry: true
         }
       };
     } else {
