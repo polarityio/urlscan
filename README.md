@@ -44,6 +44,14 @@ This option allows you to specify a regex used to ignore IPv4 Addresses.  Any IP
 
 If checked, the Overlay Window will receive the URL\'s screenshot from the Polarity server rather than directly from the urlscan website. If your screenshot images are not properly displaying try enabling this option as it can resolve issues in some environments with unsupported web proxy configurations on the client.
 
+### Max Concurrent Requests
+
+Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 20.
+
+### Minimum Time Between Lookups
+
+Minimum amount of time in milliseconds between lookups. Integration must be restarted after changing this option. Defaults to 100.
+
 ## Installation Instructions
 
 Installation instructions for integrations are provided on the [PolarityIO GitHub Page](https://polarityio.github.io/).

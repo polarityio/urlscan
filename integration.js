@@ -457,6 +457,14 @@ function _handleErrors(entity, err, response, body) {
           errorMessage: 'Unauthorized'
         }
       };
+    } else if (response.statusCode === 400) {
+      result = {
+        error: {
+          statusCode: response.statusCode,
+          errorMessage: body.message ? body.message : 'Bad Request',
+          description: body.description ? body.description : null
+        }
+      };
     } else if (response.statusCode === 404) {
       result = {
         error: null,
@@ -576,6 +584,7 @@ function validateOptions(userOptions, cb) {
 }
 
 function onMessage(payload, options, callback) {
+  Logger.trace({ payload }, 'onMessage');
   switch (payload.action) {
     case 'RETRY_LOOKUP':
       doLookup([payload.entity], options, (err, lookupResults) => {
@@ -593,7 +602,8 @@ function onMessage(payload, options, callback) {
       });
       break;
     case 'SUBMIT_URL':
-      submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
+      const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
+        Logger.trace({ entity, tags, submitAsPublic }, 'submitUrl');
         const requestOptions = {
           uri: `${API_URL}/v1/scan/`,
           method: 'POST',
@@ -617,15 +627,19 @@ function onMessage(payload, options, callback) {
           json: true
         };
 
+        Logger.trace({ requestOptions }, 'Submit URL Request Options');
+
         requestWithDefaults(requestOptions, (error, response, body) => {
+          Logger.trace({ body }, 'URL Submission Response Body');
           let parsedResult = _handleErrors(entity, error, response, body);
           if (parsedResult.error) {
-            cb({ errors: [parsedResult.error] });
+            Logger.error({ err: parsedResult.error }, 'Encountered error submitting url');
+            cb(parsedResult.error);
           } else {
             const {
               data: { body }
             } = parsedResult;
-            cb(null, {
+            const newDetails = {
               ...body,
               results: [
                 {
@@ -640,10 +654,13 @@ function onMessage(payload, options, callback) {
                   }
                 }
               ]
-            });
+            };
+            Logger.trace({ newDetails }, 'Result of url submission');
+            cb(null, newDetails);
           }
         });
       };
+      submitUrl(payload, options, callback);
       break;
   }
 }

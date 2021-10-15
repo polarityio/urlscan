@@ -37,32 +37,41 @@ polarity.export = PolarityComponent.extend({
 
       const payload = {
         action: 'SUBMIT_URL',
-        entity: this.get('block.entity')
-      };
-
-      this.sendIntegrationMessage({
-        payload,
         data: {
           entity: this.entity,
           tags: this.tags,
           submitAsPublic: this.submitAsPublic
         }
-      })
+      };
+
+      this.sendIntegrationMessage(payload)
         .then((newDetails) => {
+          console.info(newDetails);
           outerThis.set('message', newDetails.message || 'Success!');
           outerThis.set('details', newDetails);
         })
         .catch((err) => {
-          outerThis.set(
-            'errorMessage',
-            `Failed to Submit: ${
-              err.detail ||
-              err.message ||
-              err.title ||
-              err.description ||
-              'Unknown Reason'
-            }`
-          );
+          console.error(err);
+
+          if (typeof err.meta === 'string') {
+            this.set('errorMessage', err.meta);
+          } else if (
+            typeof err.meta === 'object' &&
+            typeof err.meta.errorMessage === 'string' &&
+            typeof err.meta.description === 'string'
+          ) {
+            this.set(
+              'errorMessage',
+              `${err.meta.errorMessage}\n\n${err.meta.description}`
+            );
+          } else if (
+            typeof err.meta === 'object' &&
+            typeof err.meta.detail === 'string'
+          ) {
+            this.set('errorMessage', err.meta.detail);
+          } else {
+            this.set('errorMessage', JSON.stringify(err.meta));
+          }
         })
         .finally(() => {
           this.set('isRunning', false);

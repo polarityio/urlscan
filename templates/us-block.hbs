@@ -1,3 +1,6 @@
+{{#if errorMessage}}
+    <div class="alert alert-danger mt-1 error-container">{{errorMessage}}</div>
+{{/if}}
 {{#if details.canSubmitUrl}}
   <span class="p-title">{{fa-icon "info-circle" fixedWidth=false}}
     Submit URL to urlscan</span>
