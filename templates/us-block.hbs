@@ -1,5 +1,5 @@
 {{#if errorMessage}}
-    <div class="alert alert-danger mt-1 error-container">{{errorMessage}}</div>
+  <div class="alert alert-danger mt-1 error-container">{{errorMessage}}</div>
 {{/if}}
 {{#if details.canSubmitUrl}}
   <span class="p-title">{{fa-icon "info-circle" fixedWidth=false}}
@@ -49,9 +49,9 @@
       Submit
     </button>
   </div>
-  {{#if message}}
+  {{#if details.errorMessage}}
     <div class="alert alert-info mt-1">
-      {{message}}
+      {{details.errorMessage}}
     </div>
   {{/if}}
 {{else}}
@@ -72,10 +72,6 @@
         </button>
         <div class="mt-1">
           {{details.errorMessage}}
-        </div>
-        <div class="mt-1">
-          <span class="p-footnote">
-            You can retry your search by pressing the "Retry Search" button.</span>
         </div>
       {{/if}}
     </div>
