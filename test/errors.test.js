@@ -124,16 +124,16 @@ test('502 response in "getBase64Screenshot" should result in `isGatewayTimeout`'
 
 test('502 response in "getQuotas" should result in `isGatewayTimeout`', (done) => {
   nock(`https://urlscan.io`)
-      .get('/api/v1/search')
-      .query(true)
-      .reply(200, {
-        results: [
-          {
-            result: 'https://urlscan.io/getverdicts',
-            screenshot: 'https://urlscan.io/screenshot'
-          }
-        ]
-      });
+    .get('/api/v1/search')
+    .query(true)
+    .reply(200, {
+      results: [
+        {
+          result: 'https://urlscan.io/getverdicts',
+          screenshot: 'https://urlscan.io/screenshot'
+        }
+      ]
+    });
 
   nock(`https://urlscan.io`).get('/getverdicts').query(true).reply(200, {
     verdicts: [],
@@ -153,39 +153,14 @@ test('502 response in "getQuotas" should result in `isGatewayTimeout`', (done) =
   });
 });
 
-test('504 response should result in `isGatewayTimeout`', (done) => {
-  nock(`https://urlscan.io`).get('/api/v1/search').query(true).reply(504);
+test('ECONNRESET response in "searchIndicator" should result in `isConnectionReset`', (done) => {
+  nock(`https://urlscan.io`)
+    .get('/api/v1/search')
+    .query(true)
+    .replyWithError({ code: 'ECONNRESET' });
 
   doLookup([ip], options, (err, lookupResults) => {
     // console.info(JSON.stringify(lookupResults, null, 4));
-    expect(lookupResults.length).toBe(1);
-    const details = lookupResults[0].data.details;
-    expect(details.maxRequestQueueLimitHit).toBe(false);
-    expect(details.isConnectionReset).toBe(false);
-    expect(details.isGatewayTimeout).toBe(true);
-    done();
-  });
-});
-
-test('500 response should result in `isGatewayTimeout', (done) => {
-  nock(`https://urlscan.io`).get('/api/v1/search').query(true).reply(500);
-
-  doLookup([ip], options, (err, lookupResults) => {
-    // console.info(JSON.stringify(lookupResults, null, 4));
-    expect(lookupResults.length).toBe(1);
-    const details = lookupResults[0].data.details;
-    expect(details.maxRequestQueueLimitHit).toBe(false);
-    expect(details.isConnectionReset).toBe(false);
-    expect(details.isGatewayTimeout).toBe(true);
-    done();
-  });
-});
-
-test('ECONNRESET response should result in `isConnectionReset`', (done) => {
-  nock(`https://urlscan.io`).get('/api/v1/search').query(true).replyWithError({ code: 'ECONNRESET' });
-
-  doLookup([ip], options, (err, lookupResults) => {
-    console.info(JSON.stringify(lookupResults, null, 4));
     expect(lookupResults.length).toBe(1);
     const details = lookupResults[0].data.details;
     expect(details.maxRequestQueueLimitHit).toBe(false);
@@ -194,3 +169,106 @@ test('ECONNRESET response should result in `isConnectionReset`', (done) => {
     done();
   });
 });
+
+test('ECONNRESET response in "getVerdicts" should result in `isConnectionReset`', (done) => {
+  nock(`https://urlscan.io`)
+    .get('/api/v1/search')
+    .query(true)
+    .reply(200, {
+      results: [
+        {
+          result: 'https://urlscan.io/getverdicts'
+        }
+      ]
+    });
+
+  nock(`https://urlscan.io`)
+    .get('/getverdicts')
+    .query(true)
+    .replyWithError({ code: 'ECONNRESET' });
+
+  doLookup([ip], options, (err, lookupResults) => {
+    // console.info(JSON.stringify(lookupResults, null, 4));
+    expect(lookupResults.length).toBe(1);
+    const details = lookupResults[0].data.details;
+    expect(details.maxRequestQueueLimitHit).toBe(false);
+    expect(details.isConnectionReset).toBe(true);
+    expect(details.isGatewayTimeout).toBe(false);
+    done();
+  });
+});
+
+test('ECONNRESET response in "getQuotas" should result in `isConnectionRest`', (done) => {
+  nock(`https://urlscan.io`)
+    .get('/api/v1/search')
+    .query(true)
+    .reply(200, {
+      results: [
+        {
+          result: 'https://urlscan.io/getverdicts',
+          screenshot: 'https://urlscan.io/screenshot'
+        }
+      ]
+    });
+
+  nock(`https://urlscan.io`).get('/getverdicts').query(true).reply(200, {
+    verdicts: [],
+    refererLinks: []
+  });
+
+  nock(`https://urlscan.io`)
+    .get('/user/quotas')
+    .query(true)
+    .replyWithError({ code: 'ECONNRESET' });
+
+  doLookup([ip], options, (err, lookupResults) => {
+    // console.info(JSON.stringify(lookupResults, null, 4));
+    expect(lookupResults.length).toBe(1);
+    const details = lookupResults[0].data.details;
+    expect(details.maxRequestQueueLimitHit).toBe(false);
+    expect(details.isConnectionReset).toBe(true);
+    expect(details.isGatewayTimeout).toBe(false);
+    done();
+  });
+});
+
+// test('429 response in "searchIndicator" should result in `isRetryable`', (done) => {
+//   nock(`https://urlscan.io`).get('/api/v1/search').query(true).reply(429);
+
+//   doLookup([ip], options, (err, lookupResults) => {
+//     console.info(JSON.stringify(lookupResults, null, 4));
+//     expect(lookupResults.length).toBe(1);
+//     const details = lookupResults[0].data.details;
+
+//     expect(details.isConnectionReset).toBe(false);
+//     expect(details.isGatewayTimeout).toBe(false);
+//     expect(details.isRetryable).toBe(true);
+//     done();
+//   });
+// });
+
+// test('429 response in "getVerdicts" should result in `isRetryable`', (done) => {
+//   nock(`https://urlscan.io`)
+//     .get('/api/v1/search')
+//     .query(true)
+//     .reply(200, {
+//       results: [
+//         {
+//           result: 'https://urlscan.io/getverdicts'
+//         }
+//       ]
+//     });
+
+//   nock(`https://urlscan.io`).get('/getverdicts').query(true).reply(429);
+
+//   doLookup([ip], options, (err, lookupResults) => {
+//     console.info(JSON.stringify(lookupResults, null, 4));
+//     expect(lookupResults.length).toBe(1);
+//     const details = lookupResults[0].data.details;
+//     expect(details.maxRequestQueueLimitHit).toBe(false);
+//     expect(details.isConnectionReset).toBe(false);
+//     expect(details.isGatewayTimeout).toBe(false);
+//     expect(details.isRetryable).toBe(true);
+//     done();
+//   });
+// });

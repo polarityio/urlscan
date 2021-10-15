@@ -194,7 +194,6 @@ const _getEntityLookupData = (entity, options, done) => {
       if (err) {
         Logger.error(err, 'doLookup Error');
       }
-
       done(err, result);
       return;
     }
@@ -215,18 +214,20 @@ function doLookup(entities, options, cb) {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
       hasValidIndicator = true;
       limiter.submit(buildLookupResults, entity, options, (error, results) => {
+
         const maxRequestQueueLimitHit =
           (_.isEmpty(error) && _.isEmpty(results)) ||
           (error && error.message === 'This job has been dropped by Bottleneck');
+
         const statusCode = _.get(error, 'error.statusCode', '');
         const isGatewayTimeout =
           statusCode === 502 || statusCode === 504 || statusCode === 500;
-
         const isRetryable =
           results && results.data.details.allowRetry
             ? results.data.details.allowRetry
-            : undefined; // 429 status has been returned
-        const isConnectionReset = _.get(error.error, 'error.code', '') === 'ECONNRESET';
+            : null; // 429 status has been returned
+
+        const isConnectionReset = _.get(error, 'error.error.code', '') === 'ECONNRESET';
 
         if (
           maxRequestQueueLimitHit ||
@@ -236,6 +237,8 @@ function doLookup(entities, options, cb) {
         ) {
           if (isConnectionReset) numConnectionResets++;
           if (maxRequestQueueLimitHit) numThrottled++;
+
+          console.info('MAX2', maxRequestQueueLimitHit);
 
           lookupResults.push({
             entity,
@@ -308,6 +311,7 @@ function getIsMalicious(result) {
 
 function buildLookupResults(entity, options, cb) {
   _getEntityLookupData(entity, options, (err, result) => {
+    console.info('RES', result);
     if (err) {
       Logger.error(err, 'Request Error');
       return cb({
@@ -326,7 +330,9 @@ function buildLookupResults(entity, options, cb) {
     };
 
     requestWithDefaults(requestOptions, function (error, response, body) {
+      console.info('QUOTAS:', error);
       const processedResult = _handleErrors(entity, error, response, body);
+      console.info('PRO_ERRO', processedResult)
 
       if (processedResult.error) {
         return cb({
@@ -407,6 +413,7 @@ function searchIndicator(entity, options, cb) {
 
   requestWithDefaults(requestOptions, function (error, response, body) {
     let parsedResult = _handleErrors(entity, error, response, body);
+    console.info('SEARCH_PARSED_RES:', parsedResult);
 
     if (parsedResult.error) {
       cb(parsedResult.error);
@@ -424,6 +431,7 @@ function getVerdicts(uri, entity, options, cb) {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     let parsedResult = _handleErrors(entity, error, response, body);
+    console.log('VERDICT_RESULT:', parsedResult);
 
     if (parsedResult.error) {
       return cb(parsedResult.error, {});
