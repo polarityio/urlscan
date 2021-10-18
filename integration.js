@@ -1,5 +1,6 @@
 'use strict';
 
+const Bottleneck = require('bottleneck');
 const request = require('request');
 const _ = require('lodash');
 const fp = require('lodash/fp');
@@ -13,10 +14,10 @@ let previousDomainRegexAsString = '';
 let previousIpRegexAsString = '';
 let domainBlocklistRegex = null;
 let ipBlocklistRegex = null;
+let limiter = null;
 
 const MAX_DOMAIN_LABEL_LENGTH = 63;
 const MAX_DOMAIN_LENGTH = 253;
-const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
 const URL = 'https://urlscan.io';
@@ -106,168 +107,177 @@ function getQuery(entity) {
   }
 }
 
-async function getScreenshotAsBase64(imageUrl) {
+function getScreenshotAsBase64(imageUrl, cb) {
   const requestOptions = {
     uri: imageUrl,
     encoding: null,
     method: 'get'
   };
 
-  return new Promise((resolve, reject) => {
-    requestWithDefaults(requestOptions, (error, response, body) => {
-      if (error) {
-        return reject(error);
-      }
+  requestWithDefaults(requestOptions, (error, response, body) => {
+    if (error) {
+      return cb(error);
+    }
 
-      if (
-        ![200, 404].includes(response.statusCode) &&
-        !(body && Buffer.from(body).toString('base64').length)
-      ) {
-        return reject({
-          detail:
-            'Unexpected status code or Image Not Found when downloading screenshot from urlscan',
-          response
-        });
-      }
-      const data =
-        'data:' +
-        response.headers['content-type'] +
-        ';base64,' +
-        Buffer.from(body).toString('base64');
+    if (
+      ![200, 404].includes(response.statusCode) &&
+      !(body && Buffer.from(body).toString('base64').length)
+    ) {
+      return cb({
+        detail:
+          'Unexpected status code or Image Not Found when downloading screenshot from urlscan',
+        statusCode: response.statusCode
+      });
+    }
+    const data =
+      'data:' +
+      response.headers['content-type'] +
+      ';base64,' +
+      Buffer.from(body).toString('base64');
 
-      resolve(data);
-    });
+    cb(null, data);
   });
 }
 
+function _setupLimiter(options) {
+  limiter = new Bottleneck({
+    maxConcurrent: Number.parseInt(options.maxConcurrent, 10),
+    highWater: 100, // no more than 100 lookups can be queued up
+    strategy: Bottleneck.strategy.OVERFLOW,
+    minTime: Number.parseInt(options.minTime, 10)
+  });
+}
+
+const _getEntityLookupData = (entity, options, done) => {
+  async.waterfall(
+    [
+      function (next) {
+        searchIndicator(entity, options, next);
+      },
+      function (result, next) {
+        if (
+          result &&
+          result.body &&
+          !_isMiss(result.body) &&
+          result.body.results[0] &&
+          result.body.results[0].result
+        ) {
+          let uri = result.body.results[0].result;
+          getVerdicts(uri, entity, options, (err, verdictResults) => {
+            if (err) return next(err);
+
+            result.body.results[0].verdicts = verdictResults.verdicts;
+            result.body.refererLinks = verdictResults.refererLinks;
+
+            next(null, result);
+          });
+        } else {
+          next(null, result);
+        }
+      },
+      function (result, next) {
+        if (options.downloadScreenshot && fp.get('body.results.0.screenshot', result)) {
+          const screenshotUrl = result.body.results[0].screenshot;
+          getScreenshotAsBase64(screenshotUrl, (err, screenshot) => {
+            if (err) {
+              return next(err);
+            }
+            result.body.results[0].screenshotBase64 = screenshot;
+            next(null, result);
+          });
+        } else {
+          next(null, result);
+        }
+      }
+    ],
+    (err, result) => {
+      if (err) {
+        Logger.error(err, 'doLookup Error');
+      }
+      done(err, result);
+    }
+  );
+};
+
 function doLookup(entities, options, cb) {
+  const blockedEntities = [];
   let lookupResults = [];
-  let tasks = [];
+  let errors = [];
+  let numConnectionResets = 0;
+  let numThrottled = 0;
+  let numGatewayTimeouts = 0;
+  let hasValidIndicator = false;
+
+  if (!limiter) _setupLimiter(options);
 
   _setupRegexBlocklists(options);
 
-  Logger.debug(entities);
-
   entities.forEach((entity) => {
-    if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-      tasks.push(function (done) {
-        async.waterfall(
-          [
-            function (next) {
-              searchIndicator(entity, options, next);
-            },
-            function (result, next) {
-              if (
-                !_isMiss(result.body) &&
-                result.body.results[0] &&
-                result.body.results[0].result
-              ) {
-                let uri = result.body.results[0].result;
-                getVerdicts(uri, entity, options, (err, { refererLinks, verdicts }) => {
-                  if (err) return next(err);
+    if (_isInvalidEntity(entity) || _isEntityBlocklisted(entity, options)) {
+      blockedEntities.push(entity);
+      return;
+    }
 
-                  result.body.results[0].verdicts = verdicts;
-                  result.body.refererLinks = refererLinks;
+    hasValidIndicator = true;
+    limiter.submit(buildLookupResults, entity, options, (error, results) => {
+      reachedSearchLimit(entity, options, error, results, (err, searchLimitObject) => {
+        if (err) {
+          return errors.push(err);
+        }
 
-                  next(null, result);
-                });
-              } else {
-                next(null, result);
-              }
-            },
-            async function (result) {
-              if (
-                options.downloadScreenshot &&
-                fp.get('body.results.0.screenshot', result)
-              ) {
-                const screenshot = await getScreenshotAsBase64(
-                  result.body.results[0].screenshot
-                );
-                result.body.results[0].screenshotBase64 = screenshot;
-              }
-              return result;
+        if (searchLimitObject) {
+          if (searchLimitObject.isGatewayTimeout) numGatewayTimeouts++;
+          if (searchLimitObject.isConnectionReset) numConnectionResets++;
+          if (searchLimitObject.maxRequestQueueLimitHit) numThrottled++;
+
+          lookupResults.push({
+            entity,
+            isVolatile: true,
+            data: {
+              summary: [
+                searchLimitObject.isQuotaReached
+                  ? 'Search Quota Exceeded'
+                  : 'Search Limit Reached'
+              ],
+              details: searchLimitObject
             }
-          ],
-          (err, result) => {
-            if (err) {
-              Logger.error(err, 'doLookup Error');
-            }
-            done(err, result);
+          });
+        } else if (error) {
+          errors.push(error);
+        } else {
+          lookupResults.push(results);
+        }
+
+        if (
+          lookupResults.length + errors.length + blockedEntities.length ===
+          entities.length
+        ) {
+          if (numConnectionResets > 0 || numThrottled > 0) {
+            Logger.warn(
+              {
+                numEntitiesLookedUp: entities.length,
+                numConnectionResets: numConnectionResets,
+                numLookupsThrottled: numThrottled
+              },
+              'Lookup Limit Error'
+            );
           }
-        );
-      });
-    }
-  });
 
-  async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
-    if (err) {
-      Logger.error({ err: err }, 'Error');
-      return cb(err);
-    }
-
-    requestWithDefaults(
-      {
-        uri: `${URL}/user/quotas`,
-        method: 'GET',
-        headers: {
-          ...(options.apiKey && { 'API-Key': options.apiKey })
-        },
-        json: true
-      },
-      function (error, response, body) {
-        results.forEach((result) => {
-          if (options.maliciousOnly === true && getIsMalicious(result) === false) return;
-
-          const canSubmitUrl =
-            options.submitUrl &&
-            options.apiKey &&
-            result.entity.requestContext.requestType === 'OnDemand' &&
-            (result.entity.isDomain || result.entity.isURL) &&
-            result.body &&
-            result.body.results &&
-            result.body.results.length === 0;
-
-          if (canSubmitUrl) {
-            lookupResults.push({
-              entity: result.entity,
-              isVolatile: true,
-              data: {
-                summary: [],
-                details: { canSubmitUrl }
-              }
-            });
-          } else if (
-            result.body === null ||
-            _isMiss(result.body) ||
-            _.isEmpty(result.body) ||
-            _.isEmpty(result.body.results)
-          ) {
-            lookupResults.push({
-              entity: result.entity,
-              data: null
-            });
+          if (errors.length > 0) {
+            cb(errors);
           } else {
-            const dailySearchLimit = fp.get('limits.search.day')(body);
-            lookupResults.push({
-              entity: result.entity,
-              data: {
-                summary: [],
-                details: {
-                  ...result.body,
-                  searchLimitTag:
-                    dailySearchLimit && dailySearchLimit.percent > 75 &&
-                    `${dailySearchLimit.limit - dailySearchLimit.used}/${dailySearchLimit.limit}`
-                }
-              }
-            });
+            Logger.trace({lookupResults}, 'Lookup Results');
+            cb(null, lookupResults);
           }
-        });
-
-        Logger.debug({ lookupResults }, 'Results');
-        cb(null, lookupResults);
-      }
-    );
+        }
+      });
+    });
   });
+
+  if (!hasValidIndicator) {
+    Logger.trace('No valid indicators');
+    cb(null, []);
+  }
 }
 
 function getIsMalicious(result) {
@@ -283,6 +293,80 @@ function getIsMalicious(result) {
   } else {
     return false;
   }
+}
+
+function getQuota(entity, options, cb) {
+  let requestOptions = {
+    uri: `${URL}/user/quotas`,
+    method: 'GET',
+    headers: {
+      ...(options.apiKey && { 'API-Key': options.apiKey })
+    },
+    json: true
+  };
+
+  requestWithDefaults(requestOptions, function (error, response, body) {
+    const processedResult = _handleErrors(entity, error, response, body);
+
+    if (processedResult.error) {
+      return cb({
+        detail: 'Error fetching user quota',
+        error: processedResult.error
+      });
+    }
+
+    cb(null, processedResult.data.body);
+  });
+}
+
+function buildLookupResults(entity, options, cb) {
+  _getEntityLookupData(entity, options, (err, result) => {
+    if (err) {
+      Logger.error(err, 'Request Error');
+      return cb(err);
+    }
+
+    if (options.maliciousOnly === true && getIsMalicious(result) === false) {
+      return cb(null, {
+        entity,
+        data: null
+      });
+    }
+
+    const canSubmitUrl =
+      options.submitUrl &&
+      options.apiKey &&
+      (result.entity.isDomain || result.entity.isURL) &&
+      result.body &&
+      result.body.results &&
+      result.body.results.length === 0;
+
+    if (canSubmitUrl) {
+      cb(null, {
+        entity: result.entity,
+        isVolatile: true,
+        data: {
+          summary: [],
+          details: {
+            canSubmitUrl
+          }
+        }
+      });
+    } else if (result && result.body && result.body.total === 0) {
+      cb(null, {
+        entity,
+        data: null
+      });
+    } else {
+      cb(null, {
+        entity,
+        data: {
+          summary: [],
+          details: result.body
+        }
+      });
+    }
+  });
 }
 
 function searchIndicator(entity, options, cb) {
@@ -320,7 +404,7 @@ function getVerdicts(uri, entity, options, cb) {
     let parsedResult = _handleErrors(entity, error, response, body);
 
     if (parsedResult.error) {
-      cb(parsedResult.error, {});
+      return cb(parsedResult.error, {});
     } else {
       cb(null, {
         refererLinks: _getRefererLinks(body),
@@ -340,17 +424,14 @@ const _getRefererLinks = fp.flow(
 function _handleErrors(entity, err, response, body) {
   if (err) {
     return {
-      error: {
-        detail: 'HTTP Request Error',
-        error: err
-      }
+      detail: 'HTTP Request Error',
+      error: err
     };
   }
 
   let result;
   if (response) {
     if (response.statusCode === 200) {
-      // we got data!
       result = {
         error: null,
         data: {
@@ -358,8 +439,13 @@ function _handleErrors(entity, err, response, body) {
           body: body
         }
       };
+    } else if (response.statusCode === 401) {
+      result = {
+        error: {
+          errorMessage: 'Unauthorized'
+        }
+      };
     } else if (response.statusCode === 404) {
-      // no result found
       result = {
         error: null,
         data: {
@@ -367,37 +453,61 @@ function _handleErrors(entity, err, response, body) {
           body: null
         }
       };
-    } else if (response.statusCode === 429) {
-      result = {
-        error: {
-          detail: fp.get('message')(body) || 'Rate Limit Reached.'
-        }
-      };
     } else {
-      // unexpected status code
       result = {
         error: {
-          body,
-          detail: `${body.message}: ${body.description}`
+          statusCode: response.statusCode,
+          errorMessage: body && body.message ? body.message : 'Bad Request',
+          description: body && body.description ? body.description : null
         }
       };
     }
-  } else if (body) {
-    result = {
-      error: {
-        body,
-        detail: `${body.message}: ${body.description}`
-      }
-    };
-  } else {
-    result = {
-      error: {
-        detail: `Unknown Error: No response or body found.`
-      }
-    };
   }
-
   return result;
+}
+
+function reachedSearchLimit(entity, options, err, result, cb) {
+  const maxRequestQueueLimitHit =
+    (_.isEmpty(err) && _.isEmpty(result)) ||
+    (err && err.message === 'This job has been dropped by Bottleneck');
+
+  let statusCode = _.get(err, 'statusCode', 0);
+  const isGatewayTimeout = statusCode === 502 || statusCode === 504 || statusCode === 500;
+  const isQuotaReached = statusCode === 429;
+  const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
+
+  if (isQuotaReached) {
+    getQuota(entity, options, (err, quota) => {
+      if (err) {
+        Logger.error({ err }, 'Error fetching quota');
+        cb(null, err);
+      }
+
+      cb(null, {
+        maxRequestQueueLimitHit,
+        isConnectionReset,
+        isGatewayTimeout,
+        isQuotaReached,
+        isSearchLimitError: true,
+        quota
+      });
+    });
+  } else if (
+    maxRequestQueueLimitHit ||
+    isConnectionReset ||
+    isGatewayTimeout ||
+    isQuotaReached
+  ) {
+    cb(null, {
+      maxRequestQueueLimitHit,
+      isConnectionReset,
+      isGatewayTimeout,
+      isQuotaReached,
+      isSearchLimitError: true
+    });
+  } else {
+    cb(null, null);
+  }
 }
 
 function _isInvalidEntity(entity) {
@@ -463,79 +573,34 @@ function _isEntityBlocklisted(entity, options) {
 
 const _isMiss = (body) => !body || !body.results;
 
-const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
-  const requestOptions = {
-    uri: `${API_URL}/v1/scan/`,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.apiKey && { 'API-Key': options.apiKey })
-    },
-    body: {
-      url: entity.value,
-      ...(submitAsPublic && { public: 'on' }),
-      ...(tags.length > 0 && {
-        tags: fp.flow(
-          fp.split(','),
-          fp.map(fp.trim),
-          fp.concat('polarity'),
-          fp.uniq,
-          fp.compact
-        )(tags)
-      })
-    },
-    json: true
-  };
-
-  requestWithDefaults(requestOptions, (error, response, body) => {
-    let parsedResult = _handleErrors(entity, error, response, body);
-
-    if (parsedResult.error) {
-      cb({ errors: [parsedResult.error] });
-    } else {
-      const {
-        data: { body }
-      } = parsedResult;
-      cb(null, {
-        ...body,
-        results: [
-          {
-            justSubmitted: true,
-            _id: body.uuid,
-            task: {
-              visibility: body.visibility
-            },
-            page: {
-              domain: entity.value,
-              url: body.url
-            }
-          }
-        ]
-      });
-    }
-  });
-};
-
-function validateOptions(userOptions, cb){
+function validateOptions(userOptions, cb) {
   let errors = [];
-  if (typeof userOptions.domainBlocklistRegex.value === 'string' && userOptions.domainBlocklistRegex.value.length > 0){
-    try{
+  if (
+    typeof userOptions.domainBlocklistRegex.value === 'string' &&
+    userOptions.domainBlocklistRegex.value.length > 0
+  ) {
+    try {
       new RegExp(userOptions.domainBlocklistRegex.value, 'i');
-    }catch(e){
+    } catch (e) {
       errors.push({
         key: 'domainBlocklistRegex',
-        message: 'You must provide a valid regular expression (do not surround your regex in forward slashes)'
+        message:
+          'You must provide a valid regular expression (do not surround your regex in forward slashes)'
       });
     }
   }
 
-  if (typeof userOptions.ipBlocklistRegex.value === 'string' && userOptions.ipBlocklistRegex.value.length > 0){
-    try{
+  if (
+    typeof userOptions.ipBlocklistRegex.value === 'string' &&
+    userOptions.ipBlocklistRegex.value.length > 0
+  ) {
+    try {
       new RegExp(userOptions.ipBlocklistRegex.value, 'i');
-    }catch(e){
+    } catch (e) {
       errors.push({
         key: 'ipBlocklistRegex',
-        message: 'You must provide a valid regular expression (do not surround your regex in forward slashes)'
+        message:
+          'You must provide a valid regular expression (do not surround your regex in forward slashes)'
       });
     }
   }
@@ -543,9 +608,125 @@ function validateOptions(userOptions, cb){
   cb(null, errors);
 }
 
+function onMessage(payload, options, callback) {
+  Logger.trace({ payload }, 'onMessage');
+  switch (payload.action) {
+    case 'GET_QUOTA':
+      getQuota(payload.entity, options, (err, quota) => {
+        if (err) {
+          Logger.error({ err }, 'Error getting quota');
+          callback(err);
+        } else {
+          Logger.trace({ quota }, 'onMessage GET_QUOTA');
+          callback(null, {
+            quota
+          });
+        }
+      });
+      break;
+    case 'RETRY_LOOKUP':
+      doLookup([payload.entity], options, (err, lookupResults) => {
+        if (err) {
+          Logger.error({ err }, 'Error retrying lookup');
+          callback(err);
+        } else {
+          callback(
+            null,
+            lookupResults && lookupResults[0] && lookupResults[0].data === null
+              ? { data: { summary: ['No Results Found on Retry'] } }
+              : lookupResults[0]
+          );
+        }
+      });
+      break;
+    case 'SUBMIT_URL':
+      Logger.trace({ payload }, 'onMessage');
+      const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
+        const requestOptions = {
+          uri: `${API_URL}/v1/scan/`,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(options.apiKey && { 'API-Key': options.apiKey })
+          },
+          body: {
+            url: entity.value,
+            ...(submitAsPublic && { public: 'on' }),
+            ...(tags.length > 0 && {
+              tags: fp.flow(
+                fp.split(','),
+                fp.map(fp.trim),
+                fp.concat('polarity'),
+                fp.uniq,
+                fp.compact
+              )(tags)
+            })
+          },
+          json: true
+        };
+
+        Logger.trace({ requestOptions }, 'Submit URL Request Options');
+
+        requestWithDefaults(requestOptions, (error, response, body) => {
+          Logger.trace({ body }, 'URL Submission Response Body');
+          let parsedResult = _handleErrors(entity, error, response, body);
+
+          reachedSearchLimit(
+            entity,
+            options,
+            parsedResult.error,
+            parsedResult,
+            (searchLimitErr, searchLimitObject) => {
+              if (searchLimitErr) {
+                return cb(searchLimitErr);
+              }
+
+              if (searchLimitObject) {
+                return cb(null, {
+                  canSubmitUrl: true, // flag used to control template behavior
+                  ...searchLimitObject
+                });
+              } else if (parsedResult.error) {
+                Logger.error(
+                  { err: parsedResult.error },
+                  'Encountered error submitting url'
+                );
+                cb(parsedResult.error);
+              } else {
+                const {
+                  data: { body }
+                } = parsedResult;
+                const newDetails = {
+                  ...body,
+                  results: [
+                    {
+                      justSubmitted: true,
+                      _id: body.uuid,
+                      task: {
+                        visibility: body.visibility
+                      },
+                      page: {
+                        domain: entity.value,
+                        url: body.url
+                      }
+                    }
+                  ]
+                };
+                Logger.trace({ newDetails }, 'Result of url submission');
+                cb(null, newDetails);
+              }
+            }
+          );
+        });
+      };
+      submitUrl(payload, options, callback);
+      break;
+  }
+}
+
 module.exports = {
   doLookup,
   startup,
-  onMessage: submitUrl,
+  onMessage,
   validateOptions
 };

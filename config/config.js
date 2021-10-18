@@ -148,9 +148,29 @@ module.exports = {
       key: 'downloadScreenshot',
       name: 'Proxy Screenshots through Polarity Server',
       description:
-        'If checked, the Overlay Window will receive the URL\'s screenshot from the Polarity server rather than directly from the urlscan website. If your screenshot images are not properly displaying try enabling this option as it can resolve issues in some environments with unsupported web proxy configurations on the client.',
+        "If checked, the Overlay Window will receive the URL's screenshot from the Polarity server rather than directly from the urlscan website. If your screenshot images are not properly displaying try enabling this option as it can resolve issues in some environments with unsupported web proxy configurations on the client.",
       default: false,
       type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'maxConcurrent',
+      name: 'Max Concurrent Requests',
+      description:
+        'Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 20.',
+      default: 20,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'minTime',
+      name: 'Minimum Time Between Lookups',
+      description:
+        'Minimum amount of time in milliseconds between lookups. Integration must be restarted after changing this option. Defaults to 100.',
+      default: 100,
+      type: 'number',
       userCanEdit: false,
       adminOnly: true
     }

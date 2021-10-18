@@ -1,11 +1,19 @@
 {
   "main": "./integration.js",
   "name": "urlscan",
-  "version": "3.3.1",
+  "version": "3.5.0",
   "private": true,
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
-    "request": "^2.88.2",
-    "lodash": "^4.17.19",
-    "async": "^3.2.0"
+    "async": "^3.2.1",
+    "bottleneck": "^2.19.5",
+    "lodash": "^4.17.21",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "jest": "^27.2.5",
+    "nock": "^13.1.3"
   }
 }
