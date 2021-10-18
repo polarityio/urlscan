@@ -12,15 +12,15 @@
       <hr class="submit-line" />
     </div>
     <div class="input-wrapper">
-      <span class="p-value">
-        {{input
-          class="submit-as-public-checkbox"
-          type="checkbox"
-          checked=submitAsPublic
-          disabled=block._state.isSubmitting
-        }}
-      </span>
-      <span class="p-key"> &nbsp;Submit URL as Public</span>
+        <label class="d-flex align-items-center">
+            {{input
+              class="submit-as-public-checkbox"
+              type="checkbox"
+              checked=submitAsPublic
+              disabled=block._state.isSubmitting
+            }}
+            <span class="p-key ml-1">Submit URL as Public</span>
+        </label>
     </div>
     <div class="input-wrapper d-flex flex-row align-items-center">
       <span class="p-key">Tags: &nbsp; </span>
@@ -185,22 +185,21 @@
     {{#if details}}
       {{#each details.results as |result|}}
         <div class="mb-1">
-          {{#if result.justSubmitted}}
-            <div class="note">
-              <span class="p-key">
-                <span class="p-value">NOTE:</span>
-                With this URL recently being submitted, the urlscan Details and the
-                Screenshot URL might be temporarily unavailable.
-              </span>
-            </div>
-          {{/if}}
-          {{#if result._id}}
-            <div>
+            {{#if result._id}}
+                <div>
               <span class="p-value">
                 <a href="https://urlscan.io/result/{{result._id}}">
-                  View in urlscan
-                  {{fa-icon icon="external-link-square" class="external-link-icon"}}
+                  View scan result at urlscan.io
+                    {{fa-icon icon="external-link-square" class="external-link-icon"}}
                 </a>
+              </span>
+                </div>
+            {{/if}}
+          {{#if result.justSubmitted}}
+            <div class="note mt-1">
+              <span class="p-key">
+                <span class="p-value">NOTE:</span>
+                The urlscan.io Details and Screenshot URL might be temporarily unavailable until the scan completes. If the scan result page is not found, refresh the webpage until the results appear.
               </span>
             </div>
           {{/if}}
@@ -217,7 +216,7 @@
                 <span class="p-value">NOTE:</span>
                 As a private submission the scan result is not searchable. Please save
                 this link for your future reference or login to your account to view your
-                private submissions. The result page may not be immediately available.
+                private submissions. The scan result page may not be immediately available.
               </span>
             </div>
           {{/if}}
