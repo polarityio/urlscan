@@ -670,11 +670,12 @@ function onMessage(payload, options, callback) {
         requestWithDefaults(requestOptions, (error, response, body) => {
           Logger.trace({ body }, 'URL Submission Response Body');
           let parsedResult = _handleErrors(entity, error, response, body);
+
           reachedSearchLimit(
             entity,
             options,
             parsedResult.error,
-            parsedResult.result,
+            parsedResult,
             (searchLimitErr, searchLimitObject) => {
               if (searchLimitErr) {
                 return cb(searchLimitErr);
