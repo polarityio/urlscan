@@ -225,8 +225,6 @@ function doLookup(entities, options, cb) {
           return errors.push(err);
         }
 
-        Logger.info({ searchLimitObject }, 'search limit object');
-
         if (searchLimitObject) {
           if (searchLimitObject.isGatewayTimeout) numGatewayTimeouts++;
           if (searchLimitObject.isConnectionReset) numConnectionResets++;
@@ -268,6 +266,7 @@ function doLookup(entities, options, cb) {
           if (errors.length > 0) {
             cb(errors);
           } else {
+            Logger.trace({lookupResults}, 'Lookup Results');
             cb(null, lookupResults);
           }
         }
@@ -276,6 +275,7 @@ function doLookup(entities, options, cb) {
   });
 
   if (!hasValidIndicator) {
+    Logger.trace('No valid indicators');
     cb(null, []);
   }
 }
@@ -352,7 +352,7 @@ function buildLookupResults(entity, options, cb) {
           }
         }
       });
-    } else if (result.data && !result.data.body) {
+    } else if (result && result.body && result.body.total === 0) {
       cb(null, {
         entity,
         data: null
