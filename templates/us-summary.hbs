@@ -1,27 +1,18 @@
-{{#if
-  (or
-    details.isConnectionReset
-    details.maxRequestQueueLimitHit
-    details.isGatewayTimeout
-    details.summaryTag
-  )
-}}
-  <span
-    {{on 'click' (optional this.scrollToIntegration)}}
-    class='integration-summary-tag integration-background-color integration-border-color'
-  >
+{{!-- Custom search limit messages are sent as summary tag --}}
+{{#if (gt block.data.summary.length 0)}}
+    {{#each block.data.summary as | tag | }}
+        <span
+            {{on 'click' (optional this.scrollToIntegration)}}
+                class='integration-summary-tag integration-background-color integration-border-color'
+        >
     <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
     <span class='integration-text-color'>
-      {{fa-icon icon='exclamation-circle' fixedWidth=true class='summary-tag-icon'}}
-      {{#if details.summaryTag}}
-        {{details.summaryTag}}
-      {{else}}
-        Search Limit Reached
-      {{/if}}
+      {{fa-icon icon='exclamation-circle' fixedWidth=true class='summary-tag-icon'}} {{tag}}
     </span>
   </span>
-{{else}}
-  {{#if details.canSubmitUrl}}
+    {{/each}}
+{{else if details.canSubmitUrl}}
+{{!-- The entity was not found but the user can submit it for scanning --}}
     <span
       {{on 'click' (optional this.scrollToIntegration)}}
       class='integration-summary-tag integration-background-color integration-border-color'
@@ -29,7 +20,8 @@
       <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
       <span class='integration-text-color'>Not Found</span>
     </span>
-  {{else}}
+{{else}}
+{{!-- The entity was found and we should display our custom tags --}}
     <span
       {{on 'click' (optional this.scrollToIntegration)}}
       class='integration-summary-tag integration-background-color integration-border-color'
@@ -119,5 +111,4 @@
         </span>
       </span>
     {{/if}}
-  {{/if}}
 {{/if}}

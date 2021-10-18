@@ -116,7 +116,7 @@ function getScreenshotAsBase64(imageUrl, cb) {
 
   requestWithDefaults(requestOptions, (error, response, body) => {
     if (error) {
-      return reject(error);
+      return cb(error);
     }
 
     if (
@@ -195,7 +195,6 @@ const _getEntityLookupData = (entity, options, done) => {
         Logger.error(err, 'doLookup Error');
       }
       done(err, result);
-      return;
     }
   );
 };
@@ -206,6 +205,7 @@ function doLookup(entities, options, cb) {
   let errors = [];
   let numConnectionResets = 0;
   let numThrottled = 0;
+  let numGatewayTimeouts = 0;
   let hasValidIndicator = false;
 
   if (!limiter) _setupLimiter(options);
@@ -213,42 +213,35 @@ function doLookup(entities, options, cb) {
   _setupRegexBlocklists(options);
 
   entities.forEach((entity) => {
-    if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-      hasValidIndicator = true;
-      limiter.submit(buildLookupResults, entity, options, (error, results) => {
-        const maxRequestQueueLimitHit =
-          (_.isEmpty(error) && _.isEmpty(results)) ||
-          (error && error.message === 'This job has been dropped by Bottleneck');
+    if (_isInvalidEntity(entity) || _isEntityBlocklisted(entity, options)) {
+      blockedEntities.push(entity);
+      return;
+    }
 
-        const statusCode = _.get(error, 'error.statusCode', '');
-        const isGatewayTimeout =
-          statusCode === 502 || statusCode === 504 || statusCode === 500;     
-        const isQuotaReached = statusCode === 429;
-        const isConnectionReset = _.get(error, 'error.error.code', '') === 'ECONNRESET';
+    hasValidIndicator = true;
+    limiter.submit(buildLookupResults, entity, options, (error, results) => {
+      reachedSearchLimit(entity, options, error, results, (err, searchLimitObject) => {
+        if (err) {
+          return errors.push(err);
+        }
 
-        if (
-          maxRequestQueueLimitHit ||
-          isConnectionReset ||
-          isGatewayTimeout ||
-          isQuotaReached
-        ) {
-          if (isConnectionReset) numConnectionResets++;
-          if (maxRequestQueueLimitHit) numThrottled++;
+        Logger.info({ searchLimitObject }, 'search limit object');
+
+        if (searchLimitObject) {
+          if (searchLimitObject.isGatewayTimeout) numGatewayTimeouts++;
+          if (searchLimitObject.isConnectionReset) numConnectionResets++;
+          if (searchLimitObject.maxRequestQueueLimitHit) numThrottled++;
 
           lookupResults.push({
             entity,
             isVolatile: true,
             data: {
-              summary: ['! Lookup limit reached'],
-              details: {
-                maxRequestQueueLimitHit,
-                isConnectionReset,
-                isGatewayTimeout,
-                isQuotaReached,
-                summaryTag: '! Lookup limit reached',
-                errorMessage:
-                  'The search failed due to the API search limit. You can retry your search by pressing the "Retry Search" button.'
-              }
+              summary: [
+                searchLimitObject.isQuotaReached
+                  ? 'Search Quota Exceeded'
+                  : 'Search Limit Reached'
+              ],
+              details: searchLimitObject
             }
           });
         } else if (error) {
@@ -279,9 +272,7 @@ function doLookup(entities, options, cb) {
           }
         }
       });
-    } else {
-      blockedEntities.push(entity);
-    }
+    });
   });
 
   if (!hasValidIndicator) {
@@ -304,79 +295,77 @@ function getIsMalicious(result) {
   }
 }
 
+function getQuota(entity, options, cb) {
+  let requestOptions = {
+    uri: `${URL}/user/quotas`,
+    method: 'GET',
+    headers: {
+      ...(options.apiKey && { 'API-Key': options.apiKey })
+    },
+    json: true
+  };
+
+  requestWithDefaults(requestOptions, function (error, response, body) {
+    const processedResult = _handleErrors(entity, error, response, body);
+
+    if (processedResult.error) {
+      return cb({
+        detail: 'Error fetching user quota',
+        error: processedResult.error
+      });
+    }
+
+    cb(null, processedResult.data.body);
+  });
+}
+
 function buildLookupResults(entity, options, cb) {
   _getEntityLookupData(entity, options, (err, result) => {
     if (err) {
       Logger.error(err, 'Request Error');
-      return cb({
-        detail: 'Unexpected Error',
-        error: err
+      return cb(err);
+    }
+
+    if (options.maliciousOnly === true && getIsMalicious(result) === false) {
+      return cb(null, {
+        entity,
+        data: null
       });
     }
 
-    let requestOptions = {
-      uri: `${URL}/user/quotas`,
-      method: 'GET',
-      headers: {
-        ...(options.apiKey && { 'API-Key': options.apiKey })
-      },
-      json: true
-    };
+    const canSubmitUrl =
+      options.submitUrl &&
+      options.apiKey &&
+      (result.entity.isDomain || result.entity.isURL) &&
+      result.body &&
+      result.body.results &&
+      result.body.results.length === 0;
 
-    requestWithDefaults(requestOptions, function (error, response, body) {
-      const processedResult = _handleErrors(entity, error, response, body);
-
-      if (processedResult.error) {
-        return cb({
-          detail: 'Error fetching user quota',
-          error: processedResult.error
-        });
-      }
-
-      if (options.maliciousOnly === true && getIsMalicious(result) === false) return;
-
-      const canSubmitUrl =
-        options.submitUrl &&
-        options.apiKey &&
-        result.entity.requestContext.requestType === 'OnDemand' &&
-        (result.entity.isDomain || result.entity.isURL) &&
-        result.body &&
-        result.body.results &&
-        result.body.results.length === 0;
-
-      if (canSubmitUrl) {
-        cb(null, {
-          entity: result.entity,
-          isVolatile: true,
-          data: {
-            summary: [],
-            details: { canSubmitUrl }
+    if (canSubmitUrl) {
+      cb(null, {
+        entity: result.entity,
+        isVolatile: true,
+        data: {
+          summary: [],
+          details: {
+            canSubmitUrl
           }
-        });
-      } else if (processedResult.data && !processedResult.data.body) {
-        cb(null, {
-          entity: fp.get('result')(entity),
-          data: null
-        });
-      } else {
-        const dailySearchLimit = fp.get('limits.search.day')(processedResult.data.body);
-        cb(null, {
-          entity,
-          data: {
-            summary: [],
-            details: {
-              ...result.body,
-              searchLimitTag:
-                dailySearchLimit &&
-                dailySearchLimit.percent > 75 &&
-                `${dailySearchLimit.limit - dailySearchLimit.used}/${
-                  dailySearchLimit.limit
-                }`
-            }
-          }
-        });
-      }
-    });
+        }
+      });
+    } else if (result.data && !result.data.body) {
+      cb(null, {
+        entity,
+        data: null
+      });
+    } else {
+      cb(null, {
+        entity,
+        data: {
+          summary: [],
+          details: result.body
+        }
+      });
+    }
   });
 }
 
@@ -435,10 +424,8 @@ const _getRefererLinks = fp.flow(
 function _handleErrors(entity, err, response, body) {
   if (err) {
     return {
-      error: {
-        detail: 'HTTP Request Error',
-        error: err
-      }
+      detail: 'HTTP Request Error',
+      error: err
     };
   }
 
@@ -458,14 +445,6 @@ function _handleErrors(entity, err, response, body) {
           errorMessage: 'Unauthorized'
         }
       };
-    } else if (response.statusCode === 400) {
-      result = {
-        error: {
-          statusCode: response.statusCode,
-          errorMessage: body.message ? body.message : 'Bad Request',
-          description: body.description ? body.description : null
-        }
-      };
     } else if (response.statusCode === 404) {
       result = {
         error: null,
@@ -478,13 +457,57 @@ function _handleErrors(entity, err, response, body) {
       result = {
         error: {
           statusCode: response.statusCode,
-          errorMessage: body.message ? body.message : 'Bad Request',
-          description: body.description ? body.description : null
+          errorMessage: body && body.message ? body.message : 'Bad Request',
+          description: body && body.description ? body.description : null
         }
       };
     }
   }
   return result;
+}
+
+function reachedSearchLimit(entity, options, err, result, cb) {
+  const maxRequestQueueLimitHit =
+    (_.isEmpty(err) && _.isEmpty(result)) ||
+    (err && err.message === 'This job has been dropped by Bottleneck');
+
+  let statusCode = _.get(err, 'statusCode', 0);
+  const isGatewayTimeout = statusCode === 502 || statusCode === 504 || statusCode === 500;
+  const isQuotaReached = statusCode === 429;
+  const isConnectionReset = _.get(err, 'code', '') === 'ECONNRESET';
+
+  if (isQuotaReached) {
+    getQuota(entity, options, (err, quota) => {
+      if (err) {
+        Logger.error({ err }, 'Error fetching quota');
+        cb(null, err);
+      }
+
+      cb(null, {
+        maxRequestQueueLimitHit,
+        isConnectionReset,
+        isGatewayTimeout,
+        isQuotaReached,
+        isSearchLimitError: true,
+        quota
+      });
+    });
+  } else if (
+    maxRequestQueueLimitHit ||
+    isConnectionReset ||
+    isGatewayTimeout ||
+    isQuotaReached
+  ) {
+    cb(null, {
+      maxRequestQueueLimitHit,
+      isConnectionReset,
+      isGatewayTimeout,
+      isQuotaReached,
+      isSearchLimitError: true
+    });
+  } else {
+    cb(null, null);
+  }
 }
 
 function _isInvalidEntity(entity) {
@@ -588,6 +611,19 @@ function validateOptions(userOptions, cb) {
 function onMessage(payload, options, callback) {
   Logger.trace({ payload }, 'onMessage');
   switch (payload.action) {
+    case 'GET_QUOTA':
+      getQuota(payload.entity, options, (err, quota) => {
+        if (err) {
+          Logger.error({ err }, 'Error getting quota');
+          callback(err);
+        } else {
+          Logger.trace({ quota }, 'onMessage GET_QUOTA');
+          callback(null, {
+            quota
+          });
+        }
+      });
+      break;
     case 'RETRY_LOOKUP':
       doLookup([payload.entity], options, (err, lookupResults) => {
         if (err) {
@@ -606,7 +642,6 @@ function onMessage(payload, options, callback) {
     case 'SUBMIT_URL':
       Logger.trace({ payload }, 'onMessage');
       const submitUrl = ({ data: { entity, tags, submitAsPublic } }, options, cb) => {
-        Logger.trace({ entity, tags, submitAsPublic }, 'submitUrl');
         const requestOptions = {
           uri: `${API_URL}/v1/scan/`,
           method: 'POST',
@@ -635,32 +670,52 @@ function onMessage(payload, options, callback) {
         requestWithDefaults(requestOptions, (error, response, body) => {
           Logger.trace({ body }, 'URL Submission Response Body');
           let parsedResult = _handleErrors(entity, error, response, body);
-          if (parsedResult.error) {
-            Logger.error({ err: parsedResult.error }, 'Encountered error submitting url');
-            cb(parsedResult.error);
-          } else {
-            const {
-              data: { body }
-            } = parsedResult;
-            const newDetails = {
-              ...body,
-              results: [
-                {
-                  justSubmitted: true,
-                  _id: body.uuid,
-                  task: {
-                    visibility: body.visibility
-                  },
-                  page: {
-                    domain: entity.value,
-                    url: body.url
-                  }
-                }
-              ]
-            };
-            Logger.trace({ newDetails }, 'Result of url submission');
-            cb(null, newDetails);
-          }
+          reachedSearchLimit(
+            entity,
+            options,
+            parsedResult.error,
+            parsedResult.result,
+            (searchLimitErr, searchLimitObject) => {
+              if (searchLimitErr) {
+                return cb(searchLimitErr);
+              }
+
+              if (searchLimitObject) {
+                return cb(null, {
+                  canSubmitUrl: true, // flag used to control template behavior
+                  ...searchLimitObject
+                });
+              } else if (parsedResult.error) {
+                Logger.error(
+                  { err: parsedResult.error },
+                  'Encountered error submitting url'
+                );
+                cb(parsedResult.error);
+              } else {
+                const {
+                  data: { body }
+                } = parsedResult;
+                const newDetails = {
+                  ...body,
+                  results: [
+                    {
+                      justSubmitted: true,
+                      _id: body.uuid,
+                      task: {
+                        visibility: body.visibility
+                      },
+                      page: {
+                        domain: entity.value,
+                        url: body.url
+                      }
+                    }
+                  ]
+                };
+                Logger.trace({ newDetails }, 'Result of url submission');
+                cb(null, newDetails);
+              }
+            }
+          );
         });
       };
       submitUrl(payload, options, callback);

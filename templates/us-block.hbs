@@ -1,8 +1,10 @@
-{{#if errorMessage}}
-  <div class="alert alert-danger mt-1 error-container">{{errorMessage}}</div>
+{{#if block._state.errorMessage}}
+  <div class="alert alert-danger mt-1 error-container">{{block._state.errorMessage}}</div>
 {{/if}}
+
+{{!-- URL Submission Form --}}
 {{#if details.canSubmitUrl}}
-  <span class="p-title">{{fa-icon "info-circle" fixedWidth=false}}
+  <span class="p-title">{{fa-icon icon="info-circle" fixedWidth=false}}
     Submit URL to urlscan</span>
   <div>
     <div>
@@ -15,7 +17,7 @@
           class="submit-as-public-checkbox"
           type="checkbox"
           checked=submitAsPublic
-          disabled=isRunning
+          disabled=block._state.isSubmitting
         }}
       </span>
       <span class="p-key"> &nbsp;Submit URL as Public</span>
@@ -29,39 +31,110 @@
           oninput=tags
           placeholder="Comma separated list..."
           value=tags
-          disabled=isRunning
+          disabled=block._state.isSubmitting
         }}
       </span>
     </div>
   </div>
   <div class="d-flex flex-row justify-content-between align-items-center">
     <div>
-      {{#if isRunning}}
-        {{fa-icon "spinner-third" fixedWidth=true spin=true}}
+      {{#if block._state.isSubmitting}}
+        {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
         Submitting
       {{/if}}
     </div>
     <button
       {{action "submitUrl"}}
       class="p-btn btn btn-light mt-1"
-      disabled={{isRunning}}
+      disabled={{block._state.isSubmitting}}
     >
       Submit
     </button>
+  </div>
+  {{#if details.isSearchLimitError}}
+      <div class="mt-1">
+          {{#if details.isQuotaReached}}
+              You have reached your urlscan.io API Submission Quota.  Please try again when your quota has reset.
+              <div class="mt-1">
+                  <a class="p-link" href="https://urlscan.io">Submit at urlscan.io {{fa-icon icon="external-link-square" class="external-link-icon"}}</a>
+              </div>
+              <div>
+                  <span class="p-footnote">Use the link to submit this URL via the urlscan.io website.</span>
+              </div>
+          {{else}}
+              A temporary urlscan.io API search limit was reached.  You can retry your submission by pressing the "Submit" button again.
+          {{/if}}
+      </div>
+  {{/if}}
+  {{!-- Get Quota Information --}}
+  <div class="mt-1">
+      {{#unless details.isSearchLimitError}}
+        <span class="p-action" {{action "showQuota"}}>
+            {{#if block._state.viewQuota}}
+                Hide Submission Quota
+                {{fa-icon icon="chevron-up"}}
+            {{else}}
+                View Submission Quota
+                {{fa-icon icon="chevron-down"}}
+            {{/if}}
+        </span>
+      {{/unless}}
+      {{#if block._state.loadingQuota}}
+          <div class="mt-1">
+              {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Quota ...
+          </div>
+      {{/if}}
+      {{#if (or block._state.viewQuota details.isSearchLimitError)}}
+          {{#if details.quota}}
+              <div class="quota-container mt-1">
+                  {{#if details.quota}}
+                      <div>
+                          <div>
+                              <span class="p-title mt-0">{{fa-icon icon="user" fixedWidth=true}} Your Submission Quotas</span>
+                          </div>
+                          <div>
+                              <span class="p-key">Daily Private Submission Quota:</span>
+                              <span class="p-value">{{details.quota.limits.private.day.used}} out of {{details.quota.limits.private.day.limit}}</span>
+                          </div>
+                          <div>
+                              <span class="p-key">Hourly Private Submission Quota:</span>
+                              <span class="p-value">{{details.quota.limits.private.hour.used}} out of {{details.quota.limits.private.hour.limit}}</span>
+                          </div>
+                          <div>
+                              <span class="p-key">Per Minute Private Submission Quota:</span>
+                              <span class="p-value">{{details.quota.limits.private.minute.used}} out of {{details.quota.limits.private.minute.limit}}</span>
+                          </div>
+                          <div class="mt-1">
+                              <span class="p-key">Daily Public Submission Quota:</span>
+                              <span class="p-value">{{details.quota.limits.public.day.used}} out of {{details.quota.limits.public.day.limit}}</span>
+                          </div>
+                          <div>
+                              <span class="p-key">Hourly Public Submission Quota:</span>
+                              <span class="p-value">{{details.quota.limits.public.hour.used}} out of {{details.quota.limits.public.hour.limit}}</span>
+                          </div>
+                          <div>
+                              <span class="p-key">Per Minute Public Submission Quota:</span>
+                              <span class="p-value">{{details.quota.limits.public.minute.used}} out of {{details.quota.limits.public.minute.limit}}</span>
+                          </div>
+                      </div>
+                  {{/if}}
+                  <span class="reload-quota-btn" {{action "getQuota"}}>
+                      {{fa-icon icon="sync" fixedWidth=true class="icon" title="Refresh Quota" spin=(if block._state.loadingQuota true false)}}
+                  </span>
+              </div>
+          {{/if}}
+      {{/if}}
   </div>
   {{#if details.errorMessage}}
     <div class="alert alert-info mt-1">
       {{details.errorMessage}}
     </div>
   {{/if}}
-{{else}}
-  {{#if details.errorMessage}}
-    <div class="mt-2">
-      {{! Can optionally use the "allowRetry" boolean flag in details to disable retry logic }}
-      {{#if (not (eq details.allowRetry false))}}
+{{else if (and details.isSearchLimitError (not details.canSubmitUrl))}}
+    <div>
         <button
           type="button"
-          class="p-btn btn btn-sm btn-polarity retry-btn mt-2"
+          class="p-btn btn btn-sm btn-polarity retry-btn"
           {{action "retryLookup"}}
         >
           {{#if running}}
@@ -71,11 +144,44 @@
           {{/if}}
         </button>
         <div class="mt-1">
-          {{details.errorMessage}}
+            {{#if details.isQuotaReached}}
+                You have reached your urlscan.io API Search Quota.  Please try again when your quota has reset.
+                <div class="mt-1">
+                    <a class="p-link" href="https://urlscan.io/search/#{{block.entity.value}}">Run search at urlscan.io {{fa-icon icon="external-link-square" class="external-link-icon"}}</a>
+                </div>
+                <div>
+                    <span class="p-footnote">Use the link to run this search via the urlscan.io website.</span>
+                </div>
+            {{else}}
+                A temporary urlscan.io API search limit was reached.  You can retry your search by pressing the "Retry Search" button.
+            {{/if}}
         </div>
-      {{/if}}
+        {{#if details.quota}}
+            <div class="quota-container mt-1">
+                <div>
+                    <div>
+                        <span class="p-title mt-0">{{fa-icon icon="user" fixedWidth=true}} Your Search Quotas</span>
+                    </div>
+                    <div>
+                        <span class="p-key">Daily Search Quota:</span>
+                        <span class="p-value">{{details.quota.limits.search.day.used}} out of {{details.quota.limits.search.day.limit}}</span>
+                    </div>
+                    <div>
+                        <span class="p-key">Hourly Search Quota:</span>
+                        <span class="p-value">{{details.quota.limits.search.hour.used}} out of {{details.quota.limits.search.hour.limit}}</span>
+                    </div>
+                    <div>
+                        <span class="p-key">Per Minute Search Quota:</span>
+                        <span class="p-value">{{details.quota.limits.search.minute.used}} out of {{details.quota.limits.search.minute.limit}}</span>
+                    </div>
+                </div>
+                <span class="reload-quota-btn" {{action "getQuota"}}>
+                    {{fa-icon icon="sync" fixedWidth=true class="icon" title="Refresh Quota" spin=(if block._state.loadingQuota true false)}}
+                </span>
+            </div>
+        {{/if}}
     </div>
-  {{else}}
+{{else}}
     {{#if details}}
       {{#each details.results as |result|}}
         <div class="mb-1">
@@ -93,7 +199,7 @@
               <span class="p-value">
                 <a href="https://urlscan.io/result/{{result._id}}">
                   View in urlscan
-                  {{fa-icon "external-link-square" class="external-link-icon"}}
+                  {{fa-icon icon="external-link-square" class="external-link-icon"}}
                 </a>
               </span>
             </div>
@@ -115,7 +221,7 @@
               </span>
             </div>
           {{/if}}
-          <span class="p-title">{{fa-icon "browser" fixedWidth=true}} Screenshot</span>
+          <span class="p-title">{{fa-icon icon="browser" fixedWidth=true}} Screenshot</span>
           {{#if result._id}}
             <div class="image-container">
               {{#if result.screenshotBase64}}
@@ -139,7 +245,7 @@
 
           {{#if (or result.verdicts.overall.malicious result.verdicts.overall.score)}}
             <h1 class="p-title">
-              {{fa-icon "gavel" fixedWidth=true}}
+              {{fa-icon icon="gavel" fixedWidth=true}}
               Verdicts
             </h1>
             {{#if result.verdicts.overall.malicious}}
@@ -177,7 +283,7 @@
 
             {{#if result.verdicts.overall.tags}}
               <h1 class="p-title">
-                {{fa-icon "tags" fixedWidth=true}}
+                {{fa-icon icon="tags" fixedWidth=true}}
                 Tags
               </h1>
               <div>
@@ -191,7 +297,7 @@
           {{/if}}
           {{#if result.task}}
             <h1 class="p-title">
-              {{fa-icon "scanner" fixedWidth=true}}
+              {{fa-icon icon="scanner" fixedWidth=true}}
               Scan Information
             </h1>
           {{/if}}
@@ -229,7 +335,7 @@
             )
           }}
             <h1 class="p-title">
-              {{fa-icon "chart-line" fixedWidth=true}}
+              {{fa-icon icon="chart-line" fixedWidth=true}}
               Site Statistics
             </h1>
             {{#if result.stats.uniqIPs}}
@@ -260,7 +366,7 @@
 
           {{#if result.page}}
             <h1 class="p-title">
-              {{fa-icon "info" fixedWidth=true}}
+              {{fa-icon icon="info" fixedWidth=true}}
               Site Information
             </h1>
           {{/if}}
@@ -311,7 +417,7 @@
       {{/each}}
 
       {{#if (and details.refererLinks details.refererLinks.length)}}
-        <div class="p-title">{{fa-icon "link"}}
+        <div class="p-title">{{fa-icon icon="link"}}
           Referred To URLs ({{details.refererLinks.length}}):</div>
         <div class="wrap-container">
           {{#each details.refererLinks as |link|}}
@@ -319,10 +425,53 @@
           {{/each}}
         </div>
       {{/if}}
+
+      {{!-- Get Quota Information --}}
+      <div class="mt-1">
+        <span class="p-action" {{action "showQuota"}}>
+            {{#if block._state.viewQuota}}
+                Hide Search Quota
+                {{fa-icon icon="chevron-up"}}
+            {{else}}
+                View Search Quota
+                {{fa-icon icon="chevron-down"}}
+            {{/if}}
+        </span>
+          {{#if block._state.loadingQuota}}
+              <div class="mt-1">
+                  {{fa-icon icon="spinner-third" fixedWidth=true spin=true}} Loading Quota ...
+              </div>
+          {{/if}}
+          {{#if block._state.viewQuota}}
+              {{#if details.quota}}
+                  <div class="quota-container mt-1">
+                      <div>
+                          <div>
+                              <span class="p-title mt-0">{{fa-icon icon="user" fixedWidth=true}} Your Search Quotas</span>
+                          </div>
+                          <div>
+                              <span class="p-key">Daily Search Quota:</span>
+                              <span class="p-value">{{details.quota.limits.search.day.used}} out of {{details.quota.limits.search.day.limit}}</span>
+                          </div>
+                          <div>
+                              <span class="p-key">Hourly Search Quota:</span>
+                              <span class="p-value">{{details.quota.limits.search.hour.used}} out of {{details.quota.limits.search.hour.limit}}</span>
+                          </div>
+                          <div>
+                              <span class="p-key">Per Minute Search Quota:</span>
+                              <span class="p-value">{{details.quota.limits.search.minute.used}} out of {{details.quota.limits.search.minute.limit}}</span>
+                          </div>
+                      </div>
+                      <span class="reload-quota-btn" {{action "getQuota"}}>
+                          {{fa-icon icon="sync" fixedWidth=true class="icon" title="Refresh Quota" spin=(if block._state.loadingQuota true false)}}
+                      </span>
+                  </div>
+              {{/if}}
+          {{/if}}
+      </div>
     {{else}}
       No Results Found in
       {{block.name}}
       for this entity
     {{/if}}
-  {{/if}}
 {{/if}}

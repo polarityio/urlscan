@@ -122,37 +122,6 @@ test('502 response in "getBase64Screenshot" should result in `isGatewayTimeout`'
   });
 });
 
-test('502 response in "getQuotas" should result in `isGatewayTimeout`', (done) => {
-  nock(`https://urlscan.io`)
-    .get('/api/v1/search')
-    .query(true)
-    .reply(200, {
-      results: [
-        {
-          result: 'https://urlscan.io/getverdicts',
-          screenshot: 'https://urlscan.io/screenshot'
-        }
-      ]
-    });
-
-  nock(`https://urlscan.io`).get('/getverdicts').query(true).reply(200, {
-    verdicts: [],
-    refererLinks: []
-  });
-
-  nock(`https://urlscan.io`).get('/user/quotas').query(true).reply(502);
-
-  doLookup([ip], options, (err, lookupResults) => {
-    // console.info(JSON.stringify(lookupResults, null, 4));
-    expect(lookupResults.length).toBe(1);
-    const details = lookupResults[0].data.details;
-    expect(details.maxRequestQueueLimitHit).toBe(false);
-    expect(details.isConnectionReset).toBe(false);
-    expect(details.isGatewayTimeout).toBe(true);
-    done();
-  });
-});
-
 test('ECONNRESET response in "searchIndicator" should result in `isConnectionReset`', (done) => {
   nock(`https://urlscan.io`)
     .get('/api/v1/search')
@@ -198,7 +167,7 @@ test('ECONNRESET response in "getVerdicts" should result in `isConnectionReset`'
   });
 });
 
-test('ECONNRESET response in "getQuotas" should result in `isConnectionRest`', (done) => {
+test('ECONNRESET response in "getBase64Screenshot" should result in `isConnectionReset`', (done) => {
   nock(`https://urlscan.io`)
     .get('/api/v1/search')
     .query(true)
@@ -217,11 +186,16 @@ test('ECONNRESET response in "getQuotas" should result in `isConnectionRest`', (
   });
 
   nock(`https://urlscan.io`)
-    .get('/user/quotas')
+    .get('/screenshot')
     .query(true)
     .replyWithError({ code: 'ECONNRESET' });
 
-  doLookup([ip], options, (err, lookupResults) => {
+  const downloadScreenshotOptions = {
+    ...options,
+    downloadScreenshot: true
+  };
+
+  doLookup([ip], downloadScreenshotOptions, (err, lookupResults) => {
     // console.info(JSON.stringify(lookupResults, null, 4));
     expect(lookupResults.length).toBe(1);
     const details = lookupResults[0].data.details;
@@ -234,6 +208,9 @@ test('ECONNRESET response in "getQuotas" should result in `isConnectionRest`', (
 
 test('429 response in "searchIndicator" should result in `isQuotaReached`', (done) => {
   nock(`https://urlscan.io`).get('/api/v1/search').query(true).reply(429);
+  nock(`https://urlscan.io`).get('/user/quotas').query(true).reply(200, {
+    quota: 'quota'
+  });
 
   doLookup([ip], options, (err, lookupResults) => {
     console.info(JSON.stringify(lookupResults, null, 4));
@@ -260,6 +237,9 @@ test('429 response in "getVerdicts" should result in `isQuotaReached`', (done) =
     });
 
   nock(`https://urlscan.io`).get('/getverdicts').query(true).reply(429);
+  nock(`https://urlscan.io`).get('/user/quotas').query(true).reply(200, {
+    quota: 'quota'
+  });
 
   doLookup([ip], options, (err, lookupResults) => {
     console.info(JSON.stringify(lookupResults, null, 4));
@@ -293,44 +273,16 @@ test('429 response in "getBase64Screenshot" should result in `isQuotaReached`', 
 
   nock(`https://urlscan.io`).get('/screenshot').query(true).reply(429);
 
+  nock(`https://urlscan.io`).get('/user/quotas').query(true).reply(200, {
+    quota: 'quota'
+  });
+
   const downloadScreenshotOptions = {
     ...options,
     downloadScreenshot: true
   };
 
   doLookup([ip], downloadScreenshotOptions, (err, lookupResults) => {
-    // console.info(JSON.stringify(lookupResults, null, 4));
-    expect(lookupResults.length).toBe(1);
-    const details = lookupResults[0].data.details;
-    expect(details.maxRequestQueueLimitHit).toBe(false);
-    expect(details.isConnectionReset).toBe(false);
-    expect(details.isGatewayTimeout).toBe(false);
-    expect(details.isQuotaReached).toBe(true);
-    done();
-  });
-});
-
-test('429 response in "getQuotas" should result in `isQuotaReached`', (done) => {
-  nock(`https://urlscan.io`)
-    .get('/api/v1/search')
-    .query(true)
-    .reply(200, {
-      results: [
-        {
-          result: 'https://urlscan.io/getverdicts',
-          screenshot: 'https://urlscan.io/screenshot'
-        }
-      ]
-    });
-
-  nock(`https://urlscan.io`).get('/getverdicts').query(true).reply(200, {
-    verdicts: [],
-    refererLinks: []
-  });
-
-  nock(`https://urlscan.io`).get('/user/quotas').query(true).reply(429);
-
-  doLookup([ip], options, (err, lookupResults) => {
     // console.info(JSON.stringify(lookupResults, null, 4));
     expect(lookupResults.length).toBe(1);
     const details = lookupResults[0].data.details;
