@@ -293,3 +293,34 @@ test('429 response in "getBase64Screenshot" should result in `isQuotaReached`', 
     done();
   });
 });
+
+
+test('429 response should result in quota being set', (done) => {
+  nock(`https://urlscan.io`)
+      .get('/api/v1/search')
+      .query(true)
+      .reply(200, {
+        results: [
+          {
+            result: 'https://urlscan.io/getverdicts'
+          }
+        ]
+      });
+
+  nock(`https://urlscan.io`).get('/getverdicts').query(true).reply(429);
+  nock(`https://urlscan.io`).get('/user/quotas').query(true).reply(200, {
+    quota: 'quota'
+  });
+
+  doLookup([ip], options, (err, lookupResults) => {
+    console.info(JSON.stringify(lookupResults, null, 4));
+    expect(lookupResults.length).toBe(1);
+    const details = lookupResults[0].data.details;
+    expect(details.maxRequestQueueLimitHit).toBe(false);
+    expect(details.isConnectionReset).toBe(false);
+    expect(details.isGatewayTimeout).toBe(false);
+    expect(details.isQuotaReached).toBe(true);
+    expect(details.quota.quota).toBe('quota');
+    done();
+  });
+});
