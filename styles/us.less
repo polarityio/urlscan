@@ -1,4 +1,5 @@
 @border-color: #dee2e6;
+@warning-color: #FF4559;
 
 pre {
   overflow-y: scroll;
@@ -8,11 +9,11 @@ pre {
   white-space: pre-wrap;
 }
 
-.url{
+.url {
   word-break: break-all !important;
 }
 
-.error-container{
+.error-container {
   white-space: pre-wrap;
 }
 
@@ -134,5 +135,40 @@ pre {
       font-size: 9px;
       color: #888;
     }
+  }
+}
+
+.danger-summary-tag {
+  padding: 0 !important;
+
+  .icon-container {
+    background-color: @warning-color;
+    height: 100%;
+    padding: 3px 2px;
+    margin-bottom: 0px;
+    display: inline-block;
+
+    svg {
+      margin-bottom: 1px;
+    }
+  }
+
+  .summary-tag {
+    padding: 0.25em 0em 0.25em 0.25em;
+    display: inline-block;
+  }
+
+  .data {
+    padding: 0.25em 0.4em 0.25em 0.25em;
+    display: inline-block;
+  }
+
+  .stripe-bg {
+    color: white;
+    background: repeating-linear-gradient(45deg,
+    @warning-color,
+    @warning-color 5px,
+    lighten(@warning-color, 5%) 5px,
+    lighten(@warning-color, 5%) 10px) !important;
   }
 }
