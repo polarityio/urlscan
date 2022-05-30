@@ -315,6 +315,20 @@
             </div>
           {{/if}}
 
+          {{#if result.task.domain}}
+            <div>
+              <span class="p-key">Tasked Domain: </span>
+              <span class="p-value url">{{result.task.domain}}</span>
+            </div>
+          {{/if}}
+
+          {{#if result.task.url}}
+            <div>
+              <span class="p-key">Tasked URL: </span>
+              <span class="link-container">{{result.task.url}}</span>
+            </div>
+          {{/if}}
+
           {{#if result.task.visibility}}
             <div>
               <span class="p-key">Visibility: </span>
@@ -373,13 +387,13 @@
           {{#if result.page.domain}}
             <div>
               <span class="p-key">Domain: </span>
-              <span class="p-value">{{result.page.domain}}</span>
+              <span class="p-value url">{{result.page.domain}}</span>
             </div>
           {{/if}}
           {{#if result.page.url}}
             <div>
               <span class="p-key">URL: </span>
-              <span class="p-value">{{result.page.url}}</span>
+              <span class="link-container">{{result.page.url}}</span>
             </div>
           {{/if}}
           {{#if result.page.ip}}
@@ -417,7 +431,7 @@
 
       {{#if (and details.refererLinks details.refererLinks.length)}}
         <div class="p-title">{{fa-icon icon="link"}}
-          Referred To URLs ({{details.refererLinks.length}}):</div>
+          Referred To URLs ({{details.refererLinks.length}})</div>
         <div class="wrap-container">
           {{#each details.refererLinks as |link|}}
             <span class="link-container">{{link}}</span>

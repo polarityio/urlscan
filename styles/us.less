@@ -1,9 +1,15 @@
+@border-color: #dee2e6;
+
 pre {
   overflow-y: scroll;
   overflow-x: hidden;
   max-height: 200px;
   margin: 3px 0px;
   white-space: pre-wrap;
+}
+
+.url{
+  word-break: break-all !important;
 }
 
 .error-container{
@@ -63,16 +69,22 @@ pre {
 }
 
 .link-container {
-  background-color: #ccc;
-  padding-left: 5px;
-  padding-right: 5px;
-  padding-top: 1px;
-  padding-bottom: 2px;
+  //background-color: #ddd;
+  border: 1px solid @border-color;
+  border-left: 5px solid @border-color;
+  padding: 5px;
+  //padding-left: 5px;
+  //padding-right: 5px;
+  //padding-top: 1px;
+  //padding-bottom: 2px;
   margin-bottom: 4px;
   margin-right: 4px;
-  border-radius: 4px;
+  //border-radius: 4px;
   word-break: break-all;
   display: inline-block;
+  max-height: 50px;
+  overflow-y: auto;
+  width: 100%;
 }
 
 .copy-button {

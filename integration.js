@@ -1,7 +1,7 @@
 'use strict';
 
 const Bottleneck = require('bottleneck');
-const request = require('request');
+const request = require('postman-request');
 const _ = require('lodash');
 const fp = require('lodash/fp');
 const config = require('./config/config');
@@ -95,15 +95,23 @@ function _setupRegexBlocklists(options) {
   }
 }
 
-function getQuery(entity) {
+function getQuery(entity, options) {
   if (entity.isIP) {
     return `page.ip:"${entity.value}"`;
   } else if (entity.isDomain) {
-    return `page.domain:"${entity.value}"`;
+    if (options.includeTaskedIndicators) {
+      return `page.domain:"${entity.value}" OR task.domain:"${entity.value}"`;
+    } else {
+      return `page.domain:"${entity.value}"`;
+    }
   } else if (entity.isHash) {
     return `hash:"${entity.value}"`;
   } else if (entity.isURL) {
-    return `page.url:"${entity.value}"`;
+    if (options.includeTaskedIndicators) {
+      return `page.url:"${entity.value}" OR task.url:"${entity.value}"`;
+    } else {
+      return `page.url:"${entity.value}"`;
+    }
   }
 }
 
@@ -266,7 +274,7 @@ function doLookup(entities, options, cb) {
           if (errors.length > 0) {
             cb(errors);
           } else {
-            Logger.trace({lookupResults}, 'Lookup Results');
+            Logger.trace({ lookupResults }, 'Lookup Results');
             cb(null, lookupResults);
           }
         }
