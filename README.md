@@ -6,7 +6,7 @@ To learn more about urlscan, please visit: https://urlscan.io/about/
 
 | ![image](images/overlay.png) | ![image](images/overlay-malicious.png) |
 |---|---|
-|*urlscan.io example* | *malicious domain example*|
+|*non-malicious domain example* | *malicious domain example*|
 
 ## Integration Overview
 
