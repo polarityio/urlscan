@@ -4,9 +4,9 @@ The Polarity urlscan integration will lookup domains, sha256 hashes, IPv4 and IP
 To learn more about urlscan, please visit: https://urlscan.io/about/
 
 
-| ![image](images/overlay.png) |
-|---|
-|*urlscan.io example* |
+| ![image](images/overlay.png) | ![image](images/overlay-malicious.png) |
+|---|---|
+|*non-malicious domain example* | *malicious domain example*|
 
 ## Integration Overview
 
@@ -27,6 +27,10 @@ If there are no search results, this allows you to choose to submit the url for 
 ### View Malicious Indicators Only
 
 If checked, only indicators flagged as malicious will be returned
+
+### Search Tasked URLs and Domains
+
+If checked, the integration will search tasked URLs and Domains in addition to the primary domain (defaults to true).
 
 ### Ignored List
 
