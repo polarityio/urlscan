@@ -118,6 +118,16 @@ module.exports = {
       adminOnly: false
     },
     {
+      key: 'includeTaskedIndicators',
+      name: 'Search Tasked URLs and Domains',
+      description:
+        'If checked, the integration will search tasked URLs and Domains in addition to the primary domain (defaults to true).',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'blocklist',
       name: 'Ignored Entities',
       description: 'List of domains and IPs that you never want to send to urlscan',

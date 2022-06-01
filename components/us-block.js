@@ -79,7 +79,10 @@ polarity.export = PolarityComponent.extend({
             typeof err.meta.errorMessage === 'string' &&
             typeof err.meta.description === 'string'
           ) {
-            this.set('block._state.errorMessage', `${err.meta.errorMessage}\n\n${err.meta.description}`);
+            this.set(
+              'block._state.errorMessage',
+              `${err.meta.errorMessage}\n\n${err.meta.description}`
+            );
           } else if (
             typeof err.meta === 'object' &&
             typeof err.meta.detail === 'string'

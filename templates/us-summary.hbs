@@ -22,19 +22,21 @@
     </span>
 {{else}}
 {{!-- The entity was found and we should display our custom tags --}}
-    <span
-      {{on 'click' (optional this.scrollToIntegration)}}
-      class='integration-summary-tag integration-background-color integration-border-color'
-    >
-      <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
-      <span class='integration-text-color'>
-        {{#if overallVerdict.malicious}}
-          Malicious
-        {{else}}
-          Not Malicious
-        {{/if}}
+    {{#if overallVerdict.malicious}}
+      <span {{on "click" (optional this.scrollToIntegration)}} class="danger-summary-tag integration-summary-tag integration-background-color integration-border-color">
+          <span class="summary-tag acronym integration-text-bold-color">{{block.acronym}}</span>
+          <span class="icon-container stripe-bg">{{fa-icon icon="exclamation" fixedWidth=true}}</span>
+          <span class="data integration-text-color">Malicious</span>
       </span>
+    {{else}}
+      <span
+        {{on 'click' (optional this.scrollToIntegration)}}
+              class='integration-summary-tag integration-background-color integration-border-color'
+      >
+      <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
+      <span class='integration-text-color'>Not Malicious</span>
     </span>
+    {{/if}}
 
     {{#if (or overallVerdict.score (eq overallVerdict.score 0))}}
       <span
@@ -56,7 +58,7 @@
       >
         <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
         <span class='integration-text-color'>
-          {{fa-icon 'tag' fixedWidth=true}}
+          {{fa-icon icon='tag' fixedWidth=true}}
           {{tag}}
         </span>
       </span>
@@ -69,7 +71,7 @@
       >
         <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
         <span class='integration-text-color'>
-          {{fa-icon 'boxes' fixedWidth=true}}
+          {{fa-icon icon='boxes' fixedWidth=true}}
           {{tag}}
         </span>
       </span>
@@ -82,7 +84,7 @@
       >
         <span class='acronym integration-text-bold-color'>{{block.acronym}}</span>
         <span class='integration-text-color'>
-          {{fa-icon 'copyright' fixedWidth=true}}
+          {{fa-icon icon='copyright' fixedWidth=true}}
           {{brand}}
         </span>
       </span>
