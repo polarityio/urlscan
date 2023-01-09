@@ -1,0 +1,136 @@
+{
+  "name": "urlscan",
+  "acronym": "URLS",
+  "description": "Searches the urlscan.io API and returns results from the most recent, relevant scan",
+  "entityTypes": [
+    "IPv4",
+    "IPv6",
+    "IPv4CIDR",
+    "domain",
+    "url",
+    "SHA256"
+  ],
+  "onDemandOnly": true,
+  "styles": [
+    "./styles/us.less"
+  ],
+  "block": {
+    "component": {
+      "file": "./components/us-block.js"
+    },
+    "template": {
+      "file": "./templates/us-block.hbs"
+    }
+  },
+  "summary": {
+    "component": {
+      "file": "./components/us-summary.js"
+    },
+    "template": {
+      "file": "./templates/us-summary.hbs"
+    }
+  },
+  "request": {
+    "cert": "",
+    "key": "",
+    "passphrase": "",
+    "ca": "",
+    "proxy": "",
+    "rejectUnauthorized": true
+  },
+  "logging": {
+    "level": "info"
+  },
+  "options": [
+    {
+      "key": "apiKey",
+      "name": "API Key",
+      "description": "A valid urlscan API Key which can be generated on the urlscan dashboard. (Only required for manual new URL submission)",
+      "default": "",
+      "type": "password",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "submitUrl",
+      "name": "Allow Manual URL Submission for Scanning",
+      "description": "If there are no search results, this allows you to choose to submit the url for scanning when searching On Demand. (API Key Required)",
+      "default": false,
+      "type": "boolean",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "maliciousOnly",
+      "name": "View Malicious Indicators Only",
+      "description": "If checked, only indicators flagged as malicious will be returned",
+      "default": false,
+      "type": "boolean",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "includeTaskedIndicators",
+      "name": "Search Tasked URLs and Domains",
+      "description": "If checked, the integration will search tasked URLs and Domains in addition to the primary domain (defaults to true).",
+      "default": true,
+      "type": "boolean",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "blocklist",
+      "name": "Ignored Entities",
+      "description": "List of domains and IPs that you never want to send to urlscan",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "domainBlocklistRegex",
+      "name": "Ignored Domain Regex",
+      "description": "Domains that match the given regex will not be looked up.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "ipBlocklistRegex",
+      "name": "Ignored IP Regex",
+      "description": "IPs that match the given regex will not be looked up.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "downloadScreenshot",
+      "name": "Proxy Screenshots through Polarity Server",
+      "description": "If checked, the Overlay Window will receive the URL's screenshot from the Polarity server rather than directly from the urlscan website. If your screenshot images are not properly displaying try enabling this option as it can resolve issues in some environments with unsupported web proxy configurations on the client.",
+      "default": false,
+      "type": "boolean",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "maxConcurrent",
+      "name": "Max Concurrent Requests",
+      "description": "Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 20.",
+      "default": 20,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "minTime",
+      "name": "Minimum Time Between Lookups",
+      "description": "Minimum amount of time in milliseconds between lookups. Integration must be restarted after changing this option. Defaults to 100.",
+      "default": 100,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    }
+  ]
+}
