@@ -24,7 +24,7 @@ module.exports = {
    */
   description:
     'Searches the urlscan.io API and returns results from the most recent, relevant scan',
-  entityTypes: ['IPv4', 'IPv6', 'IPv4CIDR', 'domain', 'url', 'sha256'],
+  entityTypes: ['IPv4', 'IPv6', 'IPv4CIDR', 'domain', 'url', 'SHA256'],
   defaultColor: 'light-pink',
   onDemandOnly: true,
   /**
@@ -74,7 +74,7 @@ module.exports = {
     ca: '',
     // An HTTP proxy to be used. Supports proxy Auth with Basic Auth, identical to support for
     // the url parameter (by embedding the auth info in the uri)
-    proxy: ""
+    proxy: ''
   },
   logging: {
     level: 'info' //trace, debug, info, warn, error, fatal
