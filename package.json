@@ -1,13 +1,13 @@
 {
   "name": "urlscan",
-  "version": "3.6.5",
+  "version": "3.7.0",
   "main": "./integration.js",
   "private": true,
   "scripts": {
     "test": "jest"
   },
   "dependencies": {
-    "async": "^3.2.3",
+    "async": "^3.2.5",
     "bottleneck": "^2.19.5",
     "lodash": "^4.17.21",
     "postman-request": "^2.88.1-postman.33"
