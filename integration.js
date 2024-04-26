@@ -354,7 +354,7 @@ function buildLookupResults(entity, options, cb) {
         entity: result.entity,
         isVolatile: true,
         data: {
-          summary: [],
+          summary: ['Not Found'],
           details: {
             canSubmitUrl
           }
@@ -369,12 +369,48 @@ function buildLookupResults(entity, options, cb) {
       cb(null, {
         entity,
         data: {
-          summary: [],
+          summary: getSummaryTags(result.body),
           details: result.body
         }
       });
     }
   });
+}
+
+function getSummaryTags(details) {
+  const tags = [];
+  let overallVerdict = _.get(details, 'results.0.verdicts.overall', {});
+  if (overallVerdict.malicious) {
+    tags.push('Malicious');
+  } else {
+    tags.push('Not Malicious');
+  }
+
+  if (typeof overallVerdict.score !== 'undefined') {
+    tags.push(`Score: ${overallVerdict.score}`);
+  }
+
+  if (Array.isArray(overallVerdict.tags)) {
+    overallVerdict.tags.forEach((tag) => tags.push(`Verdict: ${tag}`));
+  }
+
+  if (Array.isArray(overallVerdict.categories)) {
+    overallVerdict.categories.forEach((tag) => tags.push(`Category: ${tag}`));
+  }
+
+  if (Array.isArray(overallVerdict.brands)) {
+    overallVerdict.brands.forEach((brand) => tags.push(`Brand: ${brand}`));
+  }
+
+  if (details.total) {
+    tags.push(`Results: ${details.total}`);
+  }
+
+  if (details.searchLimitTag) {
+    tags.push(`Daily Searches Remmaining: ${details.searchLimitTag}`);
+  }
+
+  return tags;
 }
 
 function searchIndicator(entity, options, cb) {
