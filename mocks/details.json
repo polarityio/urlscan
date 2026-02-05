@@ -1,0 +1,177 @@
+{
+  "results": [
+    {
+      "task": {
+        "uuid": "a7b3c9d1-2e4f-5a6b-7c8d-9e0f1a2b3c4d",
+        "time": "2024-01-15T10:30:45.123Z",
+        "url": "https://example.com",
+        "visibility": "public",
+        "method": "api",
+        "source": "api",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "domain": "example.com"
+      },
+      "stats": {
+        "uniqIPs": 3,
+        "uniqCountries": 2,
+        "dataLength": 458923,
+        "encodedDataLength": 156832,
+        "requests": 42,
+        "IPv6Percentage": 0,
+        "malicious": 0,
+        "adBlocked": 5,
+        "totalLinks": 28,
+        "secureRequests": 38,
+        "securePercentage": 90
+      },
+      "page": {
+        "url": "https://example.com",
+        "domain": "example.com",
+        "ip": "93.184.216.34",
+        "country": "US",
+        "city": "Norwell",
+        "server": "ECS (sec/97A6)",
+        "asn": "AS15133",
+        "asnname": "EDGECAST, US",
+        "ptr": ""
+      },
+      "verdicts": {
+        "overall": {
+          "score": 0,
+          "malicious": false,
+          "categories": [],
+          "tags": [],
+          "brands": []
+        },
+        "urlscan": {
+          "score": 0,
+          "malicious": false,
+          "categories": []
+        },
+        "engines": {
+          "score": 0,
+          "malicious": 0,
+          "categories": [],
+          "verdicts": []
+        },
+        "community": {
+          "score": 0,
+          "votes": []
+        }
+      },
+      "_id": "507f1f77bcf86cd799439011",
+      "result": "https://urlscan.io/result/a7b3c9d1-2e4f-5a6b-7c8d-9e0f1a2b3c4d/",
+      "screenshot": "https://urlscan.io/screenshots/a7b3c9d1-2e4f-5a6b-7c8d-9e0f1a2b3c4d.png",
+      "sort": [
+        1705317045123,
+        "example.com"
+      ]
+    },
+    {
+      "task": {
+        "uuid": "b8c4d0e2-3f5g-6b7c-8d9e-0f1g2h3i4j5k",
+        "time": "2024-01-14T15:22:10.456Z",
+        "url": "http://malicious-example.net",
+        "visibility": "public",
+        "method": "automatic",
+        "source": "certstream",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+        "domain": "malicious-example.net"
+      },
+      "stats": {
+        "uniqIPs": 15,
+        "uniqCountries": 8,
+        "dataLength": 2458923,
+        "encodedDataLength": 856832,
+        "requests": 128,
+        "IPv6Percentage": 12,
+        "malicious": 8,
+        "adBlocked": 0,
+        "totalLinks": 87,
+        "secureRequests": 12,
+        "securePercentage": 9
+      },
+      "page": {
+        "url": "http://malicious-example.net",
+        "domain": "malicious-example.net",
+        "ip": "185.220.101.45",
+        "country": "RU",
+        "city": "Moscow",
+        "server": "nginx/1.14.0",
+        "asn": "AS44050",
+        "asnname": "PIN-AS, RU",
+        "ptr": "tor-exit-node.example.ru"
+      },
+      "verdicts": {
+        "overall": {
+          "score": 85,
+          "malicious": true,
+          "categories": [
+            "phishing",
+            "malware"
+          ],
+          "tags": [
+            "phishing",
+            "credential-theft",
+            "suspicious-content"
+          ],
+          "brands": [
+            "Microsoft",
+            "Office365"
+          ]
+        },
+        "urlscan": {
+          "score": 90,
+          "malicious": true,
+          "categories": [
+            "phishing"
+          ]
+        },
+        "engines": {
+          "score": 80,
+          "malicious": 7,
+          "categories": [
+            "phishing",
+            "malware"
+          ],
+          "verdicts": [
+            {
+              "engine": "Google Safe Browsing",
+              "category": "phishing",
+              "malicious": true
+            },
+            {
+              "engine": "PhishTank",
+              "category": "phishing",
+              "malicious": true
+            }
+          ]
+        },
+        "community": {
+          "score": 75,
+          "votes": [
+            {
+              "vote": "malicious"
+            },
+            {
+              "vote": "malicious"
+            },
+            {
+              "vote": "suspicious"
+            }
+          ]
+        }
+      },
+      "_id": "507f1f77bcf86cd799439012",
+      "result": "https://urlscan.io/result/b8c4d0e2-3f5g-6b7c-8d9e-0f1g2h3i4j5k/",
+      "screenshot": "https://urlscan.io/screenshots/b8c4d0e2-3f5g-6b7c-8d9e-0f1g2h3i4j5k.png",
+      "sort": [
+        1705245730456,
+        "malicious-example.net"
+      ]
+    }
+  ],
+  "total": 2,
+  "took": 127,
+  "has_more": false
+}

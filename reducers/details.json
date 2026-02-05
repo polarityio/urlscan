@@ -1,0 +1,46 @@
+{
+  "root": {
+    "path": "",
+    "on_null": "return_empty"
+  },
+  "pipeline": [
+    {
+      "op": "copy",
+      "from": "results",
+      "to": "reduced_results.results"
+    },
+    {
+      "op": "copy",
+      "from": "total",
+      "to": "reduced_results.total"
+    },
+    {
+      "op": "copy",
+      "from": "has_more",
+      "to": "reduced_results.has_more"
+    },
+    {
+      "op": "drop",
+      "paths": [
+        "reduced_results.results[].task.method",
+        "reduced_results.results[].task.uuid",
+        "reduced_results.results[].task.url",
+        "reduced_results.results[].stats.dataLength",
+        "reduced_results.results[].stats.encodedDataLength",
+        "reduced_results.results[].stats.requests",
+        "reduced_results.results[].page.url",
+        "reduced_results.results[]._id",
+        "reduced_results.results[].result",
+        "reduced_results.results[].screenshot"
+      ]
+    },
+    {
+      "op": "prune",
+      "strategy": "empty_values",
+      "target": "reduced_results"
+    }
+  ],
+  "output": {
+    "result": "$working.reduced_results"
+  }
+}
