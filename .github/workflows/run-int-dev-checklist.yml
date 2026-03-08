@@ -2,7 +2,7 @@ name: Run Integration Development Checklist
 
 on:
   pull_request:
-    branches: [master, main, develop]
+    branches: [ master, main, develop ]
 
 jobs:
   run-integration-development-checklist:
