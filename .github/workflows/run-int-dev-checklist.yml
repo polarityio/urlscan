@@ -2,12 +2,11 @@ name: Run Integration Development Checklist
 
 on:
   pull_request:
-    branches: [ master, main, develop ]
+    branches: [ master, main, develop, support/v1 ]
 
 jobs:
   run-integration-development-checklist:
     runs-on: ubuntu-latest
-    container: 'rockylinux:8'
 
     steps:
       - uses: actions/checkout@v6
